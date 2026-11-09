@@ -137,7 +137,7 @@
 | 실제 스크린리더(NVDA·VoiceOver) | MANUAL | 릴리즈 후 수동 확인 |
 | 다중 브라우저·다중 모바일 | PARTIAL | Chromium 단일. Firefox·WebKit은 후속 |
 | 장기 랜덤·타이머 반복 | PARTIAL | 10회 반복은 수행. 장시간·경계 난수는 후속 |
-| Vercel 실제 CDN·보안 헤더 | MANUAL | 프로젝트 pause 해제 후 확인 |
+| Vercel 실제 CDN·보안 헤더 | MANUAL | `https://simple-auction-game.vercel.app/` 응답 확인. CDN·압축·보안 헤더는 별도 확인 |
 | `TC-STAB-012` 반복·다중 브라우저 | PARTIAL | Chromium 1회. 반복 매트릭스는 후속 |
 
 자동화 추적성 기준으로 **P0/P1 미커버 요구사항은 0건**이다. 독립 QA는 `REL-001` 사전 검증에서 PASS했고, 남은 항목은 수동·환경 검증이다.

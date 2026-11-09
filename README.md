@@ -2,6 +2,12 @@
 
 `Simple Auction Game`은 싱글플레이 경매 경제 시뮬레이션 웹 게임입니다. 플레이어는 AI 경매 참가자들과 5라운드 경매를 진행하고, 유물의 감정·복원·위탁 판매와 영구 커리어를 관리합니다.
 
+## 플레이
+
+[https://simple-auction-game.vercel.app/](https://simple-auction-game.vercel.app/)
+
+> 사이트가 열리지 않는다면 저장소 소유자가 Vercel 프로젝트를 일시 중지하거나 종료했을 수 있습니다.
+
 ## 게임 화면
 
 | 로비 | 경매 |

@@ -196,7 +196,7 @@
 - `QA-INFRA-001`은 완료했다. 테스트 포함 타입 검사 0오류, Vitest 121개·Playwright 11개, 커버리지 기준선, CI 워크플로를 확보했다.
 - `PERF-ASSET-001`은 독립 QA PASS다. public 1,846.9 KB, 로비 451 KiB, 경매 진입 추가 177 KiB로 예산 안에 있다.
 - `A11Y-001`은 독립 QA PASS다. axe serious·critical 0건, 키보드 5라운드, 확인 모달·reduced-motion·오디오 영속화를 재현했다. 실제 스크린리더·다중 브라우저는 잔여다.
-- `REPO-001`은 완료했다. Node 26·CI·배포 위생, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00을 확인했다. Vercel 프로젝트는 사용자가 pause 상태로 두어 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다.
+- `REPO-001`은 완료했다. Node 26·CI·배포 위생, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00을 확인했다. Vercel 배포 URL은 `https://simple-auction-game.vercel.app/`이며, 실제 Vercel 헤더·CDN 검증은 별도로 남아 있다.
 - `QA-REBASE-001`은 완료했다. 최종 추적성 매트릭스와 음수 종료 잔액·6종 저주 개별 테스트를 추가했고, 자동화 기준 P0/P1 미커버 요구사항은 0건이다.
 - v2.3.1은 `PM_RELEASE_APPROVED`이자 Phase 01의 **1차 완성**이다. 프로젝트를 종료하지 않고 이후 작업은 유지보수·확장으로 분류한다. (DEC-013) 잔여 수동·환경 검증은 릴리즈 후 추적하고, 실제 태그·배포는 별도 실행이다.
 
@@ -210,7 +210,7 @@
 - Lighthouse 접근성은 A11Y-001 반영 후 1.00이다. 실제 스크린리더(NVDA·VoiceOver) 수동 검증과 다중 브라우저 키보드 반복은 미검증이다.
 - 경찰 급습과 비밀 봉투 공개 전 모달은 필수 선택을 우회하지 않도록 Escape 닫기를 의도적으로 막고 포커스 트랩만 적용한다.
 - `npm audit` 개발 의존성 취약점은 0건이다. `REPO-001`에서 Vite·Vitest·transitive 패치를 적용했고 `npm audit --omit=dev`도 0건이다.
-- CI 원격 실행은 커밋 `81930dd`의 GitHub Actions run `42556497240`에서 success로 확인했다. Vercel 배포 헤더·CDN 검증은 아직 미확인이다. Vercel 프로젝트는 사용자가 pause 상태로 두었다.
+- CI 원격 실행은 커밋 `81930dd`의 GitHub Actions run `42556497240`에서 success로 확인했다. Vercel 배포 URL `https://simple-auction-game.vercel.app/`은 응답과 페이지 title을 확인했지만, 실제 CDN·압축·보안 헤더 검증은 아직 미확인이다.
 - 다중 브라우저·다중 모바일 브라우저
 - 장기 랜덤 반복과 성능 반복
 - 경찰 탈출·뇌물·체포 S4는 사용자 수동 확인이며 QA 에이전트 직접 재실행은 아님
@@ -239,7 +239,7 @@
 
 1. PM: v2.3.1을 Phase 01의 1차 완성으로 유지하고, 이후 작업은 유지보수·확장 후보로 분류한다. (`DEC-013`)
 2. PM: 필요하면 태그·릴리즈 노트·배포를 별도 실행한다. 실행 시 [`DEVELOPMENT.md`](../../DEVELOPMENT.md) 6절 절차를 따른다.
-3. QA_DEVOPS·PM: 실제 스크린리더, Firefox·WebKit, Vercel 재개 후 CDN·보안 헤더, 장시간 랜덤·타이머 반복을 잔여 검증으로 추적한다.
+3. QA_DEVOPS·PM: 실제 스크린리더, Firefox·WebKit, Vercel 배포 후 CDN·보안 헤더, 장시간 랜덤·타이머 반복을 잔여 검증으로 추적한다.
 4. DEV·PM: `ARCH-PVP-001`은 Phase 3 서버 계약·제품 범위를 승인한 뒤 착수한다. REL-001 독립 QA의 P2/P3 관찰과 `QD-28`도 확장 후보로 검토한다.
 5. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
 
