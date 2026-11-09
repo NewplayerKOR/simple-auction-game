@@ -2,6 +2,14 @@
 
 `Simple Auction Game`은 싱글플레이 경매 경제 시뮬레이션 웹 게임입니다. 플레이어는 AI 경매 참가자들과 5라운드 경매를 진행하고, 유물의 감정·복원·위탁 판매와 영구 커리어를 관리합니다.
 
+## 게임 화면
+
+| 로비 | 경매 |
+| :---: | :---: |
+| <img src="./assets/readme/lobby.webp" alt="로비 화면" width="480" /> | <img src="./assets/readme/auction.webp" alt="경매 화면" width="480" /> |
+
+<img src="./assets/readme/codex.webp" alt="30종 유물 도감" width="960" />
+
 ## 게임 소개
 
 - 잉글리시 호가, 4라운드 비밀 봉투, 더치 역경매를 조합한 5라운드 진행
@@ -21,11 +29,10 @@
 
 ## 현재 상태
 
-- v2.3.1 기준 **1차 완성** (`PM_RELEASE_APPROVED`)
+- 싱글플레이 경매 게임으로 플레이 가능한 상태
 - Vitest 22개 파일 / 146개 테스트, Playwright E2E 19개
 - typecheck 0오류, production build 통과, 의존성 보안 감사 0건
-- 이후 작업은 유지보수·확장 범위로 다룹니다.
-- Phase 3 실시간 PvP는 아직 구현되지 않았으며, 별도 제품 범위와 서버 계약 승인 전에는 착수하지 않습니다.
+- 향후 개선과 확장은 별도 계획으로 진행합니다.
 
 ## 문서
 
