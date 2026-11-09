@@ -29,6 +29,7 @@
 - 기존 기준선: 17개 파일 84개 테스트 → STAB-002 이후 18개 파일 114개 → UI 테스트 추가 후 19개 파일 121개 → PERF·A11Y 이후 21개 파일 134개
 - 브라우저 증거: 영어·더치 5라운드, 비밀 봉투 제출·타임아웃, 경찰 3결과+새로고침, 30종 도감, 모바일 `390x844` 필터, 키보드 전용 5라운드, 모달 포커스 트랩
 - 배포 증거: 루트·`/simple-auction-game/` preview 각각 20 requests·이미지 10개·실패 0, Lighthouse SEO 1.00
+- CI 증거: GitHub Actions `QA` run `42556497240` success (Node 26, typecheck, asset, coverage, build, subpath build, audit, E2E, artifact)
 - 경찰 탈출·뇌물·체포 S4: 사용자 수동 확인 `승인` + QA_DEVOPS Playwright 자동화
 - 미검증: 실제 스크린리더 수동 검증, 다중 브라우저, 장기 랜덤 반복, Vercel pause 해제 후 실제 CDN·헤더
 - 추적성 초안: [`QA_TRACEABILITY_DRAFT.md`](./QA_TRACEABILITY_DRAFT.md)

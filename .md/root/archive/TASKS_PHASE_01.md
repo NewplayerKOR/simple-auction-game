@@ -357,6 +357,7 @@ PM이 `.md/root/TASKS.md`의 `REL-001`로 v2.3.1 릴리즈 승인 여부를 판�
     - 하위 경로 preview에서 이미지 404 0건, Lighthouse SEO 메타 실패 0건, 프로덕션 audit 0건.
   - QA_DEVOPS 검증 (2026-11-09):
     - `npm ci`: lockfile 기준 설치 통과. `--legacy-peer-deps` 없이 동작한다.
+    - fresh clone: 로컬 clone에서 `npm ci`→typecheck→test(134개)→build 통과, 빌드 후 working tree clean.
     - `npm run typecheck`: 테스트 포함 0오류.
     - `npm test`: 21개 파일 134개 테스트 통과.
     - `npm run test:coverage`: 문장 71.73%, 분기 56.85%, 함수 63%, 줄 74.04%. `assetService`·신규 UI 코드 포함 기준선이다.
@@ -367,6 +368,7 @@ PM이 `.md/root/TASKS.md`의 `REL-001`로 v2.3.1 릴리즈 승인 여부를 판�
     - 루트 preview: `npm run verify:deploy -- http://127.0.0.1:4175/` 20 requests·이미지 10개·실패 0.
     - 하위 경로 preview: `npm run verify:deploy -- http://127.0.0.1:4174/simple-auction-game/` 20 requests·이미지 10개·실패 0.
     - Lighthouse 13.6.0 SEO: 루트·하위 경로 모두 **1.00**, 실패 audit 0.
+    - GitHub Actions `QA` run [42556497240](https://github.com/NewplayerKOR/simple-auction-game/actions/runs/42556497240): **success**. Node 26 설치, `npm ci`, typecheck, asset check, coverage, build, 하위 경로 build, audit, E2E, artifact 업로드 16단계 통과.
     - 추적 상태: `git ls-files node_modules`·`git ls-files dist`·`git ls-files '*.tsbuildinfo'` 모두 0.
-  - 미검증 범위: GitHub Actions 원격 실행은 push 후 확인한다. Vercel 프로젝트는 사용자가 pause 상태로 두었으므로 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다. 이는 저장소 오류가 아니다. 실제 CDN 압축·다중 기기 측정은 `QA-REBASE-001` 이후로 남긴다.
+  - 미검증 범위: Vercel 프로젝트는 사용자가 pause 상태로 두었으므로 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다. 이는 저장소 오류가 아니다. 실제 CDN 압축·다중 기기 측정은 `QA-REBASE-001` 이후로 남긴다.
   - 참고: `.gitignore`, `.nvmrc`, `.env.example`, `package.json`, `vercel.json`, `index.html`, `public/favicon.svg`, `public/robots.txt`, `vite.config.ts`, `src/vite-env.d.ts`, `src/services/assetService.ts`, `scripts/verify-deployment.mjs`, `.github/workflows/qa.yml`, `README.md`

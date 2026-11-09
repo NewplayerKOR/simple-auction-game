@@ -71,7 +71,7 @@
 
 | TASK | 완료일 | 담당 | 핵심 결과 | 검증 범위 | 원문 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `REPO-001` | 2026-11-09 | QA_DEVOPS | Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 검증 | fresh clone, Vitest 134개, E2E 19개, build, Lighthouse SEO 1.00, 이미지 404 0 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
+| `REPO-001` | 2026-11-09 | QA_DEVOPS | Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 검증 | fresh clone, Vitest 134개, E2E 19개, build, Lighthouse SEO 1.00, 이미지 404 0, CI run 42556497240 success | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `A11Y-001` | 2026-11-09 | DEV | 핵심 흐름 접근성·실수 방지 UX, axe serious·critical 0, Lighthouse 접근성 1.00 | 21개 파일 134개 테스트·E2E 19개·키보드 5라운드·모달 포커스·확인 모달·reduced-motion·오디오 영속화 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `PERF-ASSET-001` | 2026-11-09 | DEV | 이미지·폰트·번들 예산 최적화, public 75.14 MB → 1.85 MB | 20개 파일 126개 테스트·E2E 13개·typecheck·build, 로비 441.4 KiB·경매 추가 176.0 KiB, Lighthouse 0.96~1.00 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `QA-INFRA-001` | 2026-11-09 | QA_DEVOPS | 테스트 포함 타입 검사 0오류, Vitest 121개·Playwright E2E 11개, 커버리지 기준선, CI 워크플로 | 19개 파일 121개 10회 반복, E2E 11개, coverage 74.6%, axe 기저선 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
@@ -158,8 +158,8 @@
 - 확인한 사실: Git이 `node_modules` 8,414개·`dist` 61개·`*.tsbuildinfo` 2개를 추적하고 `.gitignore`가 없었다. `npm audit`은 개발 의존성 6건(중간 4·높음 2)을 보고했고, 로컬은 Node 26.13.0·npm 11.20.0, CI는 Node 22였다. 런타임 이미지 경로가 `/assets/...` 루트 절대 경로라 하위 경로 배포에서 404가 발생할 수 있었다. favicon·robots·meta description이 없었다.
 - 변경한 파일: `.gitignore`(신규), `.nvmrc`(신규), `.env.example`(신규), `package.json`, `package-lock.json`, `vercel.json`(신규), `index.html`, `public/favicon.svg`(신규), `public/robots.txt`(신규), `vite.config.ts`, `src/vite-env.d.ts`(신규), `src/services/assetService.ts`, `src/data/masterItems.ts`·`masterBots.ts`·`masterAchievements.ts`·`masterEvents.ts`·`chanceCards.ts`, `src/stores/useAuctionStore.ts`, `src/components/` 5개 파일, `scripts/verify-deployment.mjs`(신규), `vitest.setup.ts`, `.github/workflows/qa.yml`, `README.md`, `.md/specs/PROJECT_STATE.md`, `.md/specs/DECISIONS.md`, `.md/specs/QA_TEST_PLAN.md`, `.md/specs/QA_TRACEABILITY_DRAFT.md`, `.md/root/archive/TASKS_PHASE_01.md`.
 - 실행한 명령: `git rm -r --cached node_modules dist`, `git rm --cached *.tsbuildinfo`, `npm ci`, `npm run typecheck`, `npm test`, `npm run test:coverage`, `npm run test:e2e`, `npm run build`, `npm run build:subpath`, `npm run check:assets`, `npm audit`, `npm audit --omit=dev`, `npm run verify:deploy -- <루트·하위 경로 URL>`, Lighthouse 13.6.0 SEO.
-- 결과: Node 26·npm 11 고정, 테스트 Web Storage 경고 제거, audit 전체·프로덕션 0건, Vitest 21개 파일 134개·E2E 19개 통과, 타입 검사 0오류, 루트·하위 경로 preview 이미지 404 0건, Lighthouse SEO 1.00, 추적 산출물 0건. Vite 6.4.5·Vitest 4.1.12·`@vitejs/plugin-react` 4.7.0·`@types/node` 26.6.6을 적용했다.
-- 미검증 범위: GitHub Actions 원격 실행은 push 후 확인한다. Vercel 프로젝트가 pause 상태여서 실제 Vercel 보안 헤더·CDN·캐시 검증은 재개 후로 미룬다. 이는 저장소 오류가 아니다.
+- 결과: Node 26·npm 11 고정, 테스트 Web Storage 경고 제거, audit 전체·프로덕션 0건, Vitest 21개 파일 134개·E2E 19개 통과, 타입 검사 0오류, 루트·하위 경로 preview 이미지 404 0건, Lighthouse SEO 1.00, 추적 산출물 0건. fresh clone에서 `npm ci`→typecheck→test→build와 빌드 후 clean working tree를 확인했고, GitHub Actions `QA` run `42556497240`이 success로 완료됐다. Vite 6.4.5·Vitest 4.1.12·`@vitejs/plugin-react` 4.7.0·`@types/node` 26.6.6을 적용했다.
+- 미검증 범위: Vercel 프로젝트가 pause 상태여서 실제 Vercel 보안 헤더·CDN·캐시 검증은 재개 후로 미룬다. 이는 저장소 오류가 아니다.
 - 결함·충돌: `assetUrl()`이 Vite 밖 Playwright 테스트 프로세스에서 `import.meta.env`가 없어 실패하는 문제를 확인해 optional env 처리로 수정했다. `DEC-012`로 Node 26·배포 경로 정책을 기록했다.
 - 상태 변경: `REPO-001` `[ ] -> [x]`. 상세 원문은 `.md/root/archive/TASKS_PHASE_01.md` 10절에 보관했다.
 - 다음 시작 지점: `DOC-003`에서 문서·스키마·추적성을 정합한 뒤 `QA-REBASE-001`을 해제한다. PM은 1~7번째 TASK 결과를 확인한 뒤 `REL-001`을 재판정한다.

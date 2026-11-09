@@ -99,8 +99,8 @@
 | 검증 | 결과 | 검증 범위와 한계 |
 | :--- | :--- | :--- |
 | 추적 해제 | `node_modules` 8,414개·`dist` 61개·`*.tsbuildinfo` 2개 추적 해제, `.gitignore` 추가 | `package-lock.json`은 유지 |
-| Node 26 | `.nvmrc` 26, `engines.node >=26`, `@types/node` 26.6.6, 테스트 `--no-experimental-webstorage` | 로컬 Node 26.13.0·npm 11.20.0. CI Node 26 원격 실행은 push 후 확인 |
-| `npm ci` | lockfile 기준 설치 통과, `--legacy-peer-deps` 불필요 | 로컬 Windows. fresh clone 검증은 커밋 후 수행 |
+| Node 26 | `.nvmrc` 26, `engines.node >=26`, `@types/node` 26.6.6, 테스트 `--no-experimental-webstorage` | 로컬 Node 26.13.0·npm 11.20.0. GitHub Actions Node 26 실행 성공 |
+| `npm ci` | lockfile 기준 설치 통과, `--legacy-peer-deps` 불필요 | 로컬 Windows와 fresh clone 모두 통과 |
 | `npm audit` | 전체·프로덕션 모두 **0 vulnerabilities** | Vite 6.4.5·Vitest 4.1.12·plugin-react 4.7.0 적용 |
 | `npm run typecheck` | 테스트 포함 0오류 | 21개 테스트 파일 기준 |
 | `npm test` | 21개 파일 134개 테스트 통과 | skip·xfail 0건 |
@@ -110,7 +110,8 @@
 | `npm run check:assets` | public 1,846.9 KB, 이미지 104개, WebP·참조·변형 무결성 통과 | 파일·예산 검사 |
 | 배포 검증 | 루트·하위 경로 preview 각각 20 requests·이미지 10개·404 0 | `scripts/verify-deployment.mjs`, Chromium |
 | Lighthouse SEO | 루트·하위 경로 모두 **1.00**, 실패 audit 0 | Lighthouse 13.6.0, Playwright Chromium headless |
-| CI 워크플로 | Node 26, typecheck→asset→coverage→build→subpath build→audit→E2E→artifact | `.github/workflows/qa.yml`. 원격 실행은 push 후 확인 |
+| CI 워크플로 | Node 26, typecheck→asset→coverage→build→subpath build→audit→E2E→artifact | GitHub Actions run `42556497240` success. 16단계 전체 통과 |
+| fresh clone | `npm ci`→typecheck→test 134개→build 통과, 빌드 후 working tree clean | 로컬 clone. 원격 CI도 같은 커밋 `81930dd`에서 통과 |
 
 ### 구 `docs/`에서 이관한 QA 증거
 
@@ -176,7 +177,7 @@
 - Lighthouse 접근성은 A11Y-001 반영 후 1.00이다. 실제 스크린리더(NVDA·VoiceOver) 수동 검증과 다중 브라우저 키보드 반복은 미검증이다.
 - 경찰 급습과 비밀 봉투 공개 전 모달은 필수 선택을 우회하지 않도록 Escape 닫기를 의도적으로 막고 포커스 트랩만 적용한다.
 - `npm audit` 개발 의존성 취약점은 0건이다. `REPO-001`에서 Vite·Vitest·transitive 패치를 적용했고 `npm audit --omit=dev`도 0건이다.
-- CI 원격 실행과 Vercel 배포 헤더·CDN 검증은 아직 미확인이다. Vercel 프로젝트는 사용자가 pause 상태로 두었다.
+- CI 원격 실행은 커밋 `81930dd`의 GitHub Actions run `42556497240`에서 success로 확인했다. Vercel 배포 헤더·CDN 검증은 아직 미확인이다. Vercel 프로젝트는 사용자가 pause 상태로 두었다.
 - 다중 브라우저·다중 모바일 브라우저
 - 장기 랜덤 반복과 성능 반복
 - 경찰 탈출·뇌물·체포 S4는 사용자 수동 확인이며 QA 에이전트 직접 재실행은 아님
