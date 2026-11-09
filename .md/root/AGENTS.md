@@ -120,7 +120,7 @@
 - 프로젝트명: Simple Auction Game
 - 한 줄 요약: 싱글플레이 경매 경제 시뮬레이션 웹 게임
 - 현재 런타임·패키지 버전: `2.3.1`
-- 현재 마일스톤: v2.3.1 `RELEASE_CANDIDATE` — PM 승인 대기
+- 현재 마일스톤: v2.3.1 `PM_RELEASE_APPROVED` — 릴리즈 실행 전
 - 핵심 기술 스택:
   - Language / Runtime: TypeScript, React 18, Vite, Node.js 26 이상
   - Framework / Library: React, Zustand, Tailwind CSS, Vitest, Web Audio API

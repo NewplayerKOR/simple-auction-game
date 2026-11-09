@@ -126,7 +126,9 @@ git tag -a v2.3.2 -m "v2.3.2"
 git push origin main --follow-tags
 ```
 
-버전 태그는 `vMAJOR.MINOR.PATCH` 형식을 사용합니다. 릴리즈 승인 판정은 [`.md/root/TASKS.md`](./.md/root/TASKS.md)의 `REL-001` 절차를 따릅니다.
+버전 태그는 `vMAJOR.MINOR.PATCH` 형식을 사용합니다. 릴리즈 승인 판정 절차는 [`.md/root/TASKS.md`](./.md/root/TASKS.md)를 따르고, v2.3.1 `REL-001` 결과는 [`TASKS_PHASE_01.md`](./.md/root/archive/TASKS_PHASE_01.md) 13절에 기록되어 있습니다.
+
+v2.3.1은 2026-11-09 `PM_RELEASE_APPROVED` 상태입니다. 실제 태그·릴리즈 노트·배포는 승인과 분리해 실행합니다.
 
 ## 7. 라이선스
 

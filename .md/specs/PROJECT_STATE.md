@@ -4,8 +4,8 @@
 > **기준일:** 2026-11-09
 > **활성 문서 체계:** `.md`  
 > **런타임·패키지 버전:** `2.3.1`  
-> **현재 마일스톤:** v2.3.1 `RELEASE_CANDIDATE`  
-> **다음 판단:** `REL-001` 보류 — 1~7번째 TASK 완료. 독립 QA 잔여 범위 확인 후 `PM_RELEASE_APPROVED` 재판정
+> **현재 마일스톤:** v2.3.1 `PM_RELEASE_APPROVED`
+> **다음 판단:** 릴리즈 실행(태그·배포) 여부와 잔여 수동·환경 검증
 
 ## 1. 확인된 구현 범위
 
@@ -133,7 +133,17 @@
 | `npm run typecheck` | 테스트 포함 0오류 | `tsconfig.test.json` 기준 |
 | `npm run test:coverage` | 문장 71.91%, 분기 57.29%, 함수 63%, 줄 74.1% | V8 기준선 |
 | `npm run test:e2e` | Playwright Chromium 19개 통과 | 영어·더치 5라운드, 비밀 봉투, 경찰 3결과, 접근성·성능 자산 |
-| 자동화 판정 | P0/P1 미커버 요구사항 0건 | 독립 QA·실제 스크린리더·다중 브라우저·Vercel CDN은 별도 잔여 |
+| 자동화 판정 | P0/P1 미커버 요구사항 0건 | 실제 스크린리더·다중 브라우저·Vercel CDN은 별도 잔여. 독립 QA는 REL-001에서 PASS |
+
+### 2026-11-09 / QA_DEVOPS `REL-001` 사전 독립 QA
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `STAB-002` 독립 재검증 | **PASS** — `QD-01`~`QD-09`를 실제 store/service에서 독립 재현, P0/P1 결함 0건 | 임시 QA 테스트 19개로 손상 프로필·저장 실패·감정 비용·탈출 대출·위탁 payout·시세 영속·단일 평가를 확인. 테스트 종료 후 삭제 |
+| `PERF-ASSET-001` 독립 재검증 | **PASS** — public 1,846.9 KB, 이미지 104개, 로비 451 KiB, 경매 추가 177 KiB | 예산 5 MB·500 KB·1.5 MB 이내. 로컬 preview 1회 측정이며 실제 CDN은 미검증 |
+| `A11Y-001` 독립 재검증 | **PASS** — axe serious·critical 0, 키보드 5라운드, 확인 모달·reduced-motion·오디오 영속화 | Chromium 자동화 범위. 실제 스크린리더·Firefox·WebKit은 미검증 |
+| 전체 게이트 | Vitest 22개 파일 146개, E2E 19개, typecheck 0오류, coverage 문장 71.97%·분기 57.48%, build 통과, audit 전체·프로덕션 0건 | 2026-11-09 HEAD `d809e51`, 작업 트리 clean |
+| 비차단 관찰 | 더치 저장 실패 시 틱 정지(P2), 저장 실패 시 VICTORY BGM 선재생(P3), 금액 소수 허용(P3) | 정상 플레이 밖 또는 새로고침 복구 가능. 릴리즈 차단 아님 |
 
 ### 구 `docs/`에서 이관한 QA 증거
 
@@ -169,35 +179,34 @@
 
 | ID | 상태 | 요약 | 결정·TASK |
 | :--- | :---: | :--- | :--- |
-| `QD-01` | DEV_COMPLETE | 손상된 `highestRoomTierUnlocked`가 백지 화면과 `TypeError`를 만든다. 검증·복구·`ErrorBoundary` 적용. 독립 QA 대기 | `STAB-002` |
-| `QD-02` | DEV_COMPLETE | 저장 실패가 결과 전이·입장·종료에 전파되지 않는다. 실패 반환·화면 전이 보류·재시도 적용. 독립 QA 대기 | `STAB-002` |
-| `QD-03` | DEV_COMPLETE | 입찰 후 감정·카드 지출로 잔액이 음수가 될 수 있다. 낙찰 예약액 차감 후 지출 적용. 독립 QA 대기 | `STAB-002` |
-| `QD-04` | DEV_COMPLETE | 탈출 정산이 긴급 대출 상환을 차감하지 않는다. `DEC-009` 적용. 독립 QA 대기 | `DEC-009`, `STAB-002` |
-| `QD-05` | DEV_COMPLETE | 경찰 모달이 숨겨진 `realValue`를 노출할 수 있다. 추정 범위·감정 결과만 표시. 독립 QA 대기 | `STAB-002` |
-| `QD-06` | DEV_COMPLETE | 위탁 판매가 보존 배수를 이중 적용할 수 있다. 단일 payout 함수 적용. 독립 QA 대기 | `DEC-011`, `STAB-002` |
-| `QD-07` | DEV_COMPLETE | 시장 시세가 새로고침으로 초기화되어 `DUMP` 회피가 가능하다. 프로필 영속화·복원 적용. 독립 QA 대기 | `STAB-002` |
-| `QD-08` | DEV_COMPLETE | 감정 비용이 아이템별 `appraisalCost`와 상수 $500으로 불일치한다. 아이템별 비용 적용. 독립 QA 대기 | `DEC-010`, `STAB-002` |
-| `QD-09` | DEV_COMPLETE | 세션 순위와 보관함·위탁의 보존 상태 평가가 다르다. 단일 평가 계약 적용. 독립 QA 대기 | `DEC-011`, `STAB-002` |
+| `QD-01` | QA_VERIFIED | 손상된 `highestRoomTierUnlocked`가 백지 화면과 `TypeError`를 만든다. 검증·복구·`ErrorBoundary` 적용. REL-001 독립 QA PASS | `STAB-002` |
+| `QD-02` | QA_VERIFIED | 저장 실패가 결과 전이·입장·종료에 전파되지 않는다. 실패 반환·화면 전이 보류·재시도 적용. REL-001 독립 QA PASS | `STAB-002` |
+| `QD-03` | QA_VERIFIED | 입찰 후 감정·카드 지출로 잔액이 음수가 될 수 있다. 낙찰 예약액 차감 후 지출 적용. REL-001 독립 QA PASS | `STAB-002` |
+| `QD-04` | QA_VERIFIED | 탈출 정산이 긴급 대출 상환을 차감하지 않는다. `DEC-009` 적용. REL-001 독립 QA PASS | `DEC-009`, `STAB-002` |
+| `QD-05` | QA_VERIFIED | 경찰 모달이 숨겨진 `realValue`를 노출할 수 있다. 추정 범위·감정 결과만 표시. REL-001 독립 QA PASS | `STAB-002` |
+| `QD-06` | QA_VERIFIED | 위탁 판매가 보존 배수를 이중 적용할 수 있다. 단일 payout 함수 적용. REL-001 독립 QA PASS | `DEC-011`, `STAB-002` |
+| `QD-07` | QA_VERIFIED | 시장 시세가 새로고침으로 초기화되어 `DUMP` 회피가 가능하다. 프로필 영속화·복원 적용. REL-001 독립 QA PASS | `STAB-002` |
+| `QD-08` | QA_VERIFIED | 감정 비용이 아이템별 `appraisalCost`와 상수 $500으로 불일치한다. 아이템별 비용 적용. REL-001 독립 QA PASS | `DEC-010`, `STAB-002` |
+| `QD-09` | QA_VERIFIED | 세션 순위와 보관함·위탁의 보존 상태 평가가 다르다. 단일 평가 계약 적용. REL-001 독립 QA PASS | `DEC-011`, `STAB-002` |
 
 ## 4. 릴리즈 차단 이슈
 
 - 기존 `STAB-001`의 P0/P1 이슈는 모두 `QA_VERIFIED` 또는 `USER_VERIFIED / QA_ACCEPTED`다.
-- `STAB-002`의 P1 `QD-01`~`QD-09`는 DEV 구현·자체 검증을 완료했다. 독립 QA_DEVOPS 검증은 아직 수행하지 않았다.
+- `STAB-002`의 P1 `QD-01`~`QD-09`는 REL-001 사전 독립 QA에서 전부 PASS했다. P0/P1 미해결 결함은 0건이다.
 - `QA-INFRA-001`은 완료했다. 테스트 포함 타입 검사 0오류, Vitest 121개·Playwright 11개, 커버리지 기준선, CI 워크플로를 확보했다.
-- `PERF-ASSET-001`은 DEV 구현·자체 검증을 완료했다. public 1.85 MB, 로비 441.4 KiB, 경매 진입 추가 176.0 KiB, Lighthouse 0.96~1.00(모바일·4회)·1.00(데스크톱)을 기록했다.
-- `A11Y-001`은 DEV 구현·자체 검증을 완료했다. axe serious·critical 0건, Lighthouse 접근성 1.00, 키보드 5라운드 E2E 6개, 확인 모달·reduced-motion·오디오 영속화를 확인했다.
-- A11Y-001 반영 후에도 PERF-ASSET-001 예산은 유지된다. 로비 450.1 KiB, 경매 진입 추가 149.6 KiB, Lighthouse 총 186 KiB다.
+- `PERF-ASSET-001`은 독립 QA PASS다. public 1,846.9 KB, 로비 451 KiB, 경매 진입 추가 177 KiB로 예산 안에 있다.
+- `A11Y-001`은 독립 QA PASS다. axe serious·critical 0건, 키보드 5라운드, 확인 모달·reduced-motion·오디오 영속화를 재현했다. 실제 스크린리더·다중 브라우저는 잔여다.
 - `REPO-001`은 완료했다. Node 26·CI·배포 위생, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00을 확인했다. Vercel 프로젝트는 사용자가 pause 상태로 두어 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다.
 - `QA-REBASE-001`은 완료했다. 최종 추적성 매트릭스와 음수 종료 잔액·6종 저주 개별 테스트를 추가했고, 자동화 기준 P0/P1 미커버 요구사항은 0건이다.
-- v2.3.1은 `RELEASE_CANDIDATE`이지만 `REL-001`은 **보류**다. 1~7번째 TASK가 완료됐으므로 PM이 독립 QA 잔여 범위를 확인한 뒤 `REL-001`을 재판정한다.
+- v2.3.1은 `PM_RELEASE_APPROVED`다. 1~7번째 TASK와 독립 QA를 완료했고, 잔여 수동·환경 검증은 릴리즈 후 추적한다. 실제 태그·배포는 별도 실행이다.
 
 ## 5. 알려진 제한사항과 미검증 범위
 
-- `STAB-002`의 저장 실패·손상 프로필·구버전 프로필 복구는 DEV 테스트로 고정했지만 독립 QA_DEVOPS 재검증은 미수행
-- `ErrorBoundary`의 실제 렌더 오류 유도, 경찰 모달 숨은 가치 비노출, 위탁·비밀 봉투 UI의 전 룸 브라우저 반복은 미검증
+- `STAB-002`의 저장 실패·손상 프로필·구버전 프로필 복구는 REL-001 사전 독립 QA에서 PASS했다. 독립 QA는 임시 테스트로 `QD-01`~`QD-09`를 재현한 뒤 파일을 삭제했고 작업 트리는 clean이다.
+- `ErrorBoundary`의 실제 렌더 오류 유도, 경찰 모달 숨은 가치 비노출, 위탁·비밀 봉투 UI의 전 룸 브라우저 반복은 자동화 범위에서 확인했지만 실제 브라우저 반복은 잔여다.
 - `TC-STAB-001`의 음수 종료 잔액은 `tests/qa-rebase-001.test.ts`에서 전용 검증한다. `TC-STAB-008`은 6종 저주를 개별 테스트로 검증한다.
 - 테스트 포함 타입 검사 12개 오류는 `QA-INFRA-001`에서 0개로 해소
-- Lighthouse 기준선은 로컬 Edge 157 headless 1회 측정이다. 실제 배포 CDN·압축·다중 기기·반복 측정은 `REPO-001`·`QA-REBASE-001` 범위다.
+- Lighthouse 기준선은 로컬 Edge 157 headless 1회 측정이다. 실제 배포 CDN·압축·다중 기기·반복 측정은 릴리즈 후 잔여다.
 - Lighthouse 접근성은 A11Y-001 반영 후 1.00이다. 실제 스크린리더(NVDA·VoiceOver) 수동 검증과 다중 브라우저 키보드 반복은 미검증이다.
 - 경찰 급습과 비밀 봉투 공개 전 모달은 필수 선택을 우회하지 않도록 Escape 닫기를 의도적으로 막고 포커스 트랩만 적용한다.
 - `npm audit` 개발 의존성 취약점은 0건이다. `REPO-001`에서 Vite·Vitest·transitive 패치를 적용했고 `npm audit --omit=dev`도 0건이다.
@@ -206,31 +215,32 @@
 - 장기 랜덤 반복과 성능 반복
 - 경찰 탈출·뇌물·체포 S4는 사용자 수동 확인이며 QA 에이전트 직접 재실행은 아님
 - 5라운드 E2E는 잉글리시·더치 각각 1회 완주이며 반복·다중 환경은 아님
+- REL-001 사전 독립 QA의 비차단 관찰: 더치 저장 실패 시 틱 정지(P2), 저장 실패 시 VICTORY BGM 선재생(P3), 금액 필드 소수 허용(P3). 모두 정상 플레이 밖이거나 새로고침 복구가 가능해 릴리즈 차단으로 보지 않는다.
+- Lighthouse 접근성·성능의 QA_DEVOPS 독립 재실행, 실제 2탭 동시성, 경찰·비밀봉투·감정·복원·위탁 모달의 개별 axe 반복은 잔여다.
 - 실제 스크린리더·Firefox·WebKit·Vercel CDN은 `QA_TRACEABILITY.md` 7절의 잔여 리스크로 관리한다.
 
 ## 6. 현재 작업 상태
 
 - `STAB-001`: `DONE` — QA 최종 승인 완료. 원문: `.md/root/archive/v2.3.1/STAB-001.md`
 - `DOC-002`: `DONE` — 구 `docs/`를 `.md/`로 이관하고 `docs/` 삭제. 원문: `.md/root/archive/TASKS_PHASE_01.md`
-- `STAB-002`: `[x]` DEV_COMPLETE — P1 9건과 동반 P2 구현·자체 검증 완료, 독립 QA_DEVOPS 검증 대기
+- `STAB-002`: `[x]` DONE — P1 9건과 동반 P2 구현·자체 검증, REL-001 사전 독립 QA PASS
 - `QA-INFRA-001`: `[x]` DONE — 테스트 포함 타입 검사 0오류, Vitest 121개, Playwright 11개, 커버리지·CI 기반
-- `PERF-ASSET-001`: `[x]` DEV_COMPLETE — public 1.85 MB, 로비 441.4 KiB, 경매 추가 176.0 KiB, Lighthouse 0.96~1.00, 독립 QA_DEVOPS 재검증 대기
-- `A11Y-001`: `[x]` DEV_COMPLETE — axe serious·critical 0, Lighthouse 접근성 1.00, 키보드·확인 모달·reduced-motion·오디오 영속화 검증, 독립 QA_DEVOPS 재검증 대기
+- `PERF-ASSET-001`: `[x]` DONE — public 1.85 MB, 로비 451 KiB, 경매 추가 177 KiB, 독립 QA PASS
+- `A11Y-001`: `[x]` DONE — axe serious·critical 0, 키보드·확인 모달·reduced-motion·오디오 영속화, 독립 QA PASS
 - `REPO-001`: `[x]` DONE — Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00
 - `DOC-003`: `[x]` DONE — 스키마·아키텍처·추적성·README 정합, 소스 주석 3줄 DEV 정정
 - `QA-REBASE-001`: `[x]` DONE — PRD REQ↔TC↔테스트 최종 매트릭스, 음수 종료 잔액·6종 저주 개별 테스트, 수동 S4 의존 정리
-- `REL-001`: `[ ]` **보류** — 2026-11-09 PM 판정. 1~7번째 완료, 독립 QA 잔여 범위 확인 후 재판정
-- `ARCH-PVP-001`: `[!]` 블로커 — 서버 권위형 Phase 3 사전 아키텍처
-- Phase 3 실시간 PVP: v2.3.1 릴리즈 승인과 서버 권위 설계 전 착수 금지
+- `REL-001`: `[x]` DONE — v2.3.1 `PM_RELEASE_APPROVED`, 독립 QA PASS와 잔여 제한 기록
+- `ARCH-PVP-001`: `[!]` 블로커 — `REL-001` 승인 완료. Phase 3 서버 계약·제품 범위 승인 후 착수
+- Phase 3 실시간 PVP: 서버 계약·제품 범위 승인 전 착수 금지
 
 ## 7. 다음 시작 지점
 
-1. QA_DEVOPS: `STAB-002`·`PERF-ASSET-001`·`A11Y-001`의 독립 검증을 수행한다. 현재 기준선은 Vitest 22개 파일 146개, Playwright 19개, axe serious·critical 0, Lighthouse 접근성 1.00이다.
-2. QA_DEVOPS: `PERF-ASSET-001` 예산과 `A11Y-001` 키보드·axe를 독립 재현한다. `npm run check:assets`, `npm run perf:transfer`, Lighthouse, `tests/e2e/a11y-keyboard.spec.ts`를 확인한다.
-3. PM: 1~7번째 TASK 완료와 `QA_TRACEABILITY.md`의 잔여 리스크를 확인한 뒤 `REL-001`을 재판정한다.
-4. QA_DEVOPS·PM: Vercel 프로젝트 재개 후 실제 보안 헤더·CDN 캐시를 확인한다.
-5. DEV: QA_DEVOPS가 보고한 결함을 수정한다. `QD-28`(시드 기반 RNG·세션 이벤트 로그)은 후속 TASK 후보로 분리한다.
-6. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
+1. PM: v2.3.1 `PM_RELEASE_APPROVED` 상태를 기준으로 태그·릴리즈 노트·배포 실행 여부를 결정한다. 실행 시 `README.md` 6절 절차를 따른다.
+2. QA_DEVOPS·PM: 실제 스크린리더, Firefox·WebKit, Vercel 재개 후 CDN·보안 헤더, 장시간 랜덤·타이머 반복을 잔여 검증으로 추적한다.
+3. DEV·PM: `ARCH-PVP-001`은 Phase 3 서버 계약·제품 범위를 승인한 뒤 착수한다. `REL-001` 승인 자체는 완료됐다.
+4. DEV: REL-001 독립 QA의 P2/P3 관찰(더치 저장 실패 틱 정지, VICTORY BGM 선재생, 금액 소수 허용)과 `QD-28`(시드 기반 RNG·세션 이벤트 로그)을 후속 후보로 검토한다.
+5. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
 
 ## 8. 문서 권위와 이관
 

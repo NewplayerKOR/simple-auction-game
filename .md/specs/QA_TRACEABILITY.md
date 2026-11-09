@@ -131,15 +131,16 @@
 
 | 항목 | 상태 | 다음 확인 |
 | :--- | :--- | :--- |
-| `STAB-002` 독립 QA_DEVOPS 재검증 | 대기 | QA_DEVOPS가 별도 TASK/세션에서 재현 |
-| `PERF-ASSET-001`·`A11Y-001` 독립 QA | 대기 | 예산·axe·키보드·Lighthouse 재현 |
-| 실제 스크린리더(NVDA·VoiceOver) | MANUAL | 릴리즈 전 수동 확인 |
+| `REL-001` v2.3.1 릴리즈 승인 | **APPROVED** | 2026-11-09 `PM_RELEASE_APPROVED`. 실제 태그·배포는 별도 실행 |
+| `STAB-002` 독립 QA_DEVOPS 재검증 | **PASS** | REL-001 사전 검증에서 `QD-01`~`QD-09`를 실제 store/service로 재현. 임시 테스트 삭제 후 작업 트리 clean |
+| `PERF-ASSET-001`·`A11Y-001` 독립 QA | **PASS** | public 1,846.9 KB, 로비 451 KiB, 경매 추가 177 KiB, axe serious·critical 0, 키보드 E2E 10개 |
+| 실제 스크린리더(NVDA·VoiceOver) | MANUAL | 릴리즈 후 수동 확인 |
 | 다중 브라우저·다중 모바일 | PARTIAL | Chromium 단일. Firefox·WebKit은 후속 |
 | 장기 랜덤·타이머 반복 | PARTIAL | 10회 반복은 수행. 장시간·경계 난수는 후속 |
 | Vercel 실제 CDN·보안 헤더 | MANUAL | 프로젝트 pause 해제 후 확인 |
-| `TC-STAB-012` 반복·다중 브라우저 | PARTIAL | Chromium 1회. 반복 매트릭스는 `QA-REBASE` 이후 |
+| `TC-STAB-012` 반복·다중 브라우저 | PARTIAL | Chromium 1회. 반복 매트릭스는 후속 |
 
-자동화 추적성 기준으로 **P0/P1 미커버 요구사항은 0건**이다. 위 항목은 자동화 누락이 아니라 독립 QA·수동·환경 검증의 잔여 범위다.
+자동화 추적성 기준으로 **P0/P1 미커버 요구사항은 0건**이다. 독립 QA는 `REL-001` 사전 검증에서 PASS했고, 남은 항목은 수동·환경 검증이다.
 
 ## 8. 변경 관리
 

@@ -173,7 +173,7 @@ IDLE -> RAIDED -> RESOLVING -> ESCAPED | BRIBED_AND_WON | ARRESTED
 
 - LocalStorage 저장 실패를 성공으로 간주하지 않는다. `enterRoom`, `commitGameResult`, `finishGame`, `returnToLobby`, 경찰 탈출·체포는 저장 실패 시 화면 전이를 보류하고 `persistenceError`를 노출해 재시도할 수 있게 한다. (QD-02)
 - 손상 데이터는 안전 초기화하되 원문을 백업 키에 남기고 진단 로그를 기록한다. 마이그레이션 가능한 v2.3.0 데이터는 초기화하지 않고 v2.3.1로 승격한다.
-- DEV 자체 테스트는 저장 실패 주입, 손상 JSON, 잘못된 룸 티어, 구버전 프로필, `vaultItemStates`·업적 ID 오염을 고정했다. 독립 QA_DEVOPS 재검증은 `REL-001` 재판정 전에 수행한다. 현재 상태는 `PROJECT_STATE.md`를 따른다.
+- DEV 자체 테스트는 저장 실패 주입, 손상 JSON, 잘못된 룸 티어, 구버전 프로필, `vaultItemStates`·업적 ID 오염을 고정했다. REL-001 사전 독립 QA_DEVOPS 재검증은 PASS했다. 잔여 P2/P3 관찰과 미검증 범위는 `PROJECT_STATE.md`를 따른다.
 
 ## 10. Phase 3 서버 권위 경계
 
@@ -185,7 +185,7 @@ Phase 3 실시간 멀티플레이는 다음 계약이 승인되기 전 구현하
 - 결정론적 이벤트 로그 또는 재현 가능한 RNG 정책
 - 다중 탭·다중 클라이언트 동시성
 
-현재 LocalStorage 기반 구조를 서버 권위 구조로 표현하지 않는다. 관련 사전 작업은 `ARCH-PVP-001`이며 `REL-001` 승인 전 착수하지 않는다.
+현재 LocalStorage 기반 구조를 서버 권위 구조로 표현하지 않는다. 관련 사전 작업은 `ARCH-PVP-001`이며 `REL-001` 승인은 완료됐다. Phase 3 서버 계약과 제품 범위를 승인하기 전에는 착수하지 않는다.
 
 ## 11. 에셋·폰트 전달
 

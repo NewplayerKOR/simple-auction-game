@@ -8,8 +8,8 @@
 
 | 마일스톤 | 판정 | 비고 |
 | :--- | :---: | :--- |
-| Phase 01: v2.3.1 안정화 | `RELEASE_CANDIDATE` | `STAB-001` QA `DONE`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` DEV_COMPLETE·독립 QA 대기. `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` DONE. `REL-001` 보류 |
-| Phase 02: 실시간 멀티플레이 PVP | `BLOCKED` | Phase 01 릴리즈 승인과 서버 권위 설계 전 착수 금지 |
+| Phase 01: v2.3.1 안정화 | `PM_RELEASE_APPROVED` | `STAB-001` QA `DONE`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` 독립 QA PASS. `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` DONE. `REL-001` 승인 |
+| Phase 02: 실시간 멀티플레이 PVP | `BLOCKED` | Phase 01 승인 완료. 서버 권위 설계·Phase 3 범위 승인 전 착수 금지 |
 | Phase 00: Phase 1·2·2.5 | `ARCHIVED` | 상세 증거가 없는 과거 티켓 범위. 현재 릴리즈 근거로 사용하지 않음 |
 
 ## 2. Active Tasks (진행 중인 작업)
@@ -18,28 +18,18 @@
 
 ## 3. Backlog (대기 중인 작업)
 
-> **진행 순서:** 1번째 `STAB-002` 완료 → 2번째 `QA-INFRA-001` 완료 → 3번째 `PERF-ASSET-001` 완료 → 4번째 `A11Y-001` 완료 → 5번째 `REPO-001` 완료 → 6번째 `DOC-003` 완료 → 7번째 `QA-REBASE-001` 완료 → 8번째 `REL-001` → 9번째 `ARCH-PVP-001`
-> 8번째 `REL-001`은 1~7번째 결과와 독립 QA 잔여 범위를 확인한 뒤 PM이 판정한다.
-> `STAB-002`·`PERF-ASSET-001`·`A11Y-001`은 DEV_COMPLETE이며 독립 QA_DEVOPS 검증 대기다. `QD-28`은 후속 TASK 후보로 분리했다.
-
-### [PM]
-
-- [ ] `REL-001` **v2.3.1 릴리즈 승인 판정** — P1, Phase 01
-  - 진행 순서: 8번째 (1~7번째 결과 확인 후)
-  - 목표: 완료 TASK, 사용자 확인 범위, 미검증 제한사항을 종합해 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED` 또는 보류 사유를 결정한다.
-  - 선행: `STAB-001` `DONE`, `STAB-002`·`QA-INFRA-001`·`PERF-ASSET-001`·`A11Y-001`·`REPO-001`·`DOC-003` 완료, `QA-REBASE-001` 결과 확인.
-  - DoD: 승인 시 `.md/root/TASKS.md`와 `.md/specs/PROJECT_STATE.md`의 마일스톤을 갱신하고, 보류 시 남은 조건과 재판정 시점을 기록한다.
-  - 2026-11-09 PM 판정: **보류**. 사유: 2026-11-09 분석에서 P1 결함 9건(`QD-01`~`QD-09`)과 QA·DevOps P1 과제를 확인했다. 1~7번째 TASK는 완료됐으므로 독립 QA 잔여 범위를 확인한 뒤 재판정한다.
-  - 참고: `.md/specs/PROJECT_STATE.md`, `.md/root/archive/v2.3.1/STAB-001.md`
+> **진행 순서:** 1번째 `STAB-002` 완료 → 2번째 `QA-INFRA-001` 완료 → 3번째 `PERF-ASSET-001` 완료 → 4번째 `A11Y-001` 완료 → 5번째 `REPO-001` 완료 → 6번째 `DOC-003` 완료 → 7번째 `QA-REBASE-001` 완료 → 8번째 `REL-001` 완료 → 9번째 `ARCH-PVP-001`
+> 8번째 `REL-001`은 독립 QA PASS와 잔여 제한을 반영해 `PM_RELEASE_APPROVED`로 승인했다. 실제 태그·배포는 별도 릴리즈 실행이다.
+> `ARCH-PVP-001`은 `REL-001` 승인 조건을 충족했지만 Phase 3 서버 계약·범위 결정 전 착수하지 않는다.
 
 ### [DEV]
 
 - [!] `ARCH-PVP-001` **서버 권위형 Phase 3 사전 아키텍처** — P2, Phase 02
-  - 진행 순서: 9번째 (Phase 02, 8번째 릴리즈 승인 후)
+  - 진행 순서: 9번째 (Phase 02, `REL-001` 승인 완료)
   - 목표: 서버 권위 FSM, 자금 원장, 재접속·재동기화, 결정론적 이벤트 로그의 사전 계약을 정리한다.
-  - 블로커: `REL-001` 승인 전 착수 금지. 서버 권위 계약과 Phase 3 범위 결정이 필요하다.
+  - 블로커: Phase 3 서버 계약과 제품 범위 결정이 필요하다. `REL-001` 승인 조건은 충족했다.
   - 다음 담당: DEV가 기술 대안을 정리하고 PM이 제품 범위를 승인한다.
-  - 해제 조건: Phase 01 릴리즈 승인 + Phase 3 서버 계약 승인.
+  - 해제 조건: Phase 3 서버 계약 승인 + Phase 3 제품 범위 승인.
   - 참고: `.md/specs/PRD.md` 9절, `.md/specs/DECISIONS.md`
 
 ### [QA / DevOps]
@@ -50,17 +40,17 @@
 
 | TASK | 완료일 | 담당 | 핵심 결과 | 검증 범위 | 원문 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `REL-001` | 2026-11-09 | PM | v2.3.1 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED`, 독립 QA PASS와 잔여 제한 기록 | 146개 테스트·E2E 19개·typecheck 0·audit 0, STAB-002/PERF/A11Y 독립 QA PASS, 공개 1,846.9 KB | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `QA-REBASE-001` | 2026-11-09 | QA_DEVOPS | PRD REQ↔TC↔테스트 최종 매트릭스, 음수 종료 잔액·6종 저주 개별 보강, 수동 S4 의존 정리 | Vitest 22개 146개·E2E 19개·typecheck 0·coverage 71.91%, 22개 테스트 파일 인벤토리·TC 12개 판정 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `DOC-003` | 2026-11-09 | PM | 스키마·아키텍처·추적성·README 정합, 소스 주석 3줄 DEV 정정 | Vitest 21개 134개·typecheck 0·asset 1,846.9 KB, Markdown 22개 링크 유효·UTF-8 0, 음수 AC 근접 테스트 위치 기록 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `REPO-001` | 2026-11-09 | QA_DEVOPS | Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 검증 | fresh clone, Vitest 134개, E2E 19개, build, Lighthouse SEO 1.00, 이미지 404 0, CI run 42556497240 success | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `A11Y-001` | 2026-11-09 | DEV | 핵심 흐름 접근성·실수 방지 UX, axe serious·critical 0, Lighthouse 접근성 1.00 | 21개 파일 134개 테스트·E2E 19개·키보드 5라운드·모달 포커스·확인 모달·reduced-motion·오디오 영속화 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
-| `PERF-ASSET-001` | 2026-11-09 | DEV | 이미지·폰트·번들 예산 최적화, public 75.14 MB → 1.85 MB | 20개 파일 126개 테스트·E2E 13개·typecheck·build, 로비 441.4 KiB·경매 추가 176.0 KiB, Lighthouse 0.96~1.00 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 
 ## 5. Phase Archives (Phase별 보관 목록)
 
 | Phase | 보관 파일 | 포함 완료 TASK |
 | :--- | :--- | :--- |
-| Phase 01 | [`archive/TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) | `STAB-001`, `STAB-002`, `QA-INFRA-001`, `PERF-ASSET-001`, `A11Y-001`, `REPO-001`, `QA-REBASE-001`, `DOC-002`, `DOC-003`, `DOC-001` 대체 기록 |
+| Phase 01 | [`archive/TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) | `STAB-001`, `STAB-002`, `QA-INFRA-001`, `PERF-ASSET-001`, `A11Y-001`, `REPO-001`, `QA-REBASE-001`, `REL-001`, `DOC-002`, `DOC-003`, `DOC-001` 대체 기록 |
 
 ## 6. Historical Ticket Ranges (상세 증거 없는 과거 기록)
 
@@ -166,3 +156,15 @@
 - 결함·충돌: 제품 결함은 새로 발견하지 않았다. 레거시 테스트 파일명은 이력 보존을 위해 유지하고, REQ·TC 매핑 권위를 `QA_TRACEABILITY.md`로 이동했다.
 - 상태 변경: `QA-REBASE-001` `[ ] -> [x]`. 상세 원문은 `.md/root/archive/TASKS_PHASE_01.md` 12절에 보관했다.
 - 다음 시작 지점: PM이 `QA_TRACEABILITY.md`의 자동화 판정과 잔여 리스크를 확인한 뒤 `REL-001`을 재판정한다. `QA-REBASE-001` 이후 남은 P1 TASK는 없다.
+
+### 2026-11-09 / PM / REL-001 v2.3.1 릴리즈 승인 판정
+
+- 확인한 사실: 1~7번째 TASK가 모두 완료됐고 `QA-REBASE-001`의 자동화 추적성 기준 P0/P1 미커버 요구사항은 0건이었다. 다만 `STAB-002`·`PERF-ASSET-001`·`A11Y-001`은 DEV_COMPLETE로 남아 있어, `ARCHITECTURE.md` 9절과 `QA_TRACEABILITY.md` 7절이 요구한 REL-001 사전 독립 QA를 먼저 수행했다.
+- QA_DEVOPS 독립 검증: `npm.cmd test` 22개 파일 146개 통과, typecheck 0오류, coverage 문장 71.97%·분기 57.48%, E2E 19개 통과, axe·키보드 E2E 10개 통과, `check:assets` 1,846.9 KB·이미지 104개, `build` 통과, `perf:transfer` 로비 451 KiB·경매 추가 177 KiB, audit 전체·프로덕션 0건. 임시 독립 테스트 19개로 `QD-01`~`QD-09`를 실제 store/service에서 재현했고 모두 통과했다.
+- 판정: `STAB-002` PASS, `PERF-ASSET-001` PASS, `A11Y-001` PASS(자동화 범위). P0/P1 미해결 결함은 0건이다.
+- 릴리즈 결정: v2.3.1을 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED`로 승인한다. 실제 태그·배포는 아직 수행하지 않았으며 별도 릴리즈 실행 단계다.
+- 잔여 제한: 실제 스크린리더(NVDA·VoiceOver) 수동 검증, Firefox·WebKit·다중 브라우저, Vercel pause 해제 후 실제 CDN·압축·보안 헤더, 장시간 랜덤·타이머 반복, Lighthouse 접근성·성능의 QA_DEVOPS 독립 재실행, 실제 2탭 동시성, 경찰·비밀봉투·감정·복원·위탁 모달의 개별 axe 반복은 미검증이다.
+- 비차단 관찰: 더치 진행 중 저장 실패 시 `returnToLobby`가 틱 엔진을 먼저 정지하는 P2, 저장 실패 시 VICTORY BGM이 먼저 재생되는 P3, 금액 필드의 소수 허용 P3를 확인했다. 모두 정상 플레이 경로 밖이거나 새로고침 복구가 가능해 릴리즈 차단으로 보지 않는다. `QD-28`은 후속 후보로 유지한다.
+- 변경한 파일: `.md/root/TASKS.md`, `.md/root/archive/TASKS_PHASE_01.md`, `.md/specs/PROJECT_STATE.md`, `.md/specs/QA_TEST_PLAN.md`, `.md/specs/QA_TRACEABILITY.md`, `.md/specs/ARCHITECTURE.md`, `.md/specs/MIGRATIONS.md`, `.md/root/FEATURES.md`.
+- 상태 변경: `REL-001` `[ ] -> [x]` DONE, 마일스톤 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001`은 독립 QA PASS를 반영해 `DEV_COMPLETE -> DONE(QA_VERIFIED)`로 갱신했다.
+- 다음 시작 지점: v2.3.1 태그·배포 실행 여부를 결정하고, Phase 3 `ARCH-PVP-001`은 서버 계약·제품 범위 승인 후 착수한다. 잔여 수동·환경 검증은 릴리즈 후에도 추적한다.

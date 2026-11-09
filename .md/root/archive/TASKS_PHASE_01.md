@@ -2,20 +2,23 @@
 
 > **Phase:** 01  
 > **기간:** 2026-08-21 ~ 2026-11-09
-> **상태:** `STAB-001` DONE, `STAB-002`·`PERF-ASSET-001`·`A11Y-001` DEV_COMPLETE, `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` DONE, `DOC-002` DONE, v2.3.1 `RELEASE_CANDIDATE`
+> **상태:** `STAB-001` DONE, `STAB-002`·`PERF-ASSET-001`·`A11Y-001` REL-001 독립 QA PASS, `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001`·`REL-001` DONE, `DOC-002` DONE, v2.3.1 `PM_RELEASE_APPROVED`
 > **보관일:** 2026-11-09
+>
+> **후속 갱신:** 2026-11-09 `REL-001` 사전 독립 QA에서 `STAB-002`·`PERF-ASSET-001`·`A11Y-001`이 PASS했다. 아래 6·8·9절의 `DEV_COMPLETE`·`독립 QA 대기` 표기는 해당 작업 완료 당시의 기록이며, 최종 상태는 13절과 `TASKS.md`를 따른다.
 
 ## 1. 완료 TASK 목록
 
 | TASK | 완료일 | 담당 | 결과 | 원문 |
 | :--- | :--- | :--- | :--- | :--- |
+| `REL-001` | 2026-11-09 | PM | v2.3.1 `PM_RELEASE_APPROVED`, 독립 QA PASS·잔여 제한 기록 | 이 문서 13절 |
 | `QA-REBASE-001` | 2026-11-09 | QA_DEVOPS | PRD REQ↔TC↔테스트 최종 매트릭스, 누락·중복·수동 S4 판정, 음수 종료 잔액·6종 저주 보강 | 이 문서 12절 |
 | `REPO-001` | 2026-11-09 | QA_DEVOPS | Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 검증 | 이 문서 10절 |
 | `DOC-003` | 2026-11-09 | PM | 문서·스키마·추적성·README 정합, 소스 주석 3줄 DEV 정정 | 이 문서 11절 |
-| `A11Y-001` | 2026-11-09 | DEV | 핵심 흐름 접근성·실수 방지 UX, axe serious·critical 0, Lighthouse 접근성 1.00. 독립 QA 대기 | 이 문서 9절 |
-| `PERF-ASSET-001` | 2026-11-09 | DEV | 이미지·폰트·번들 예산 최적화, public 75.14 MB → 1.85 MB, Lighthouse 0.96~1.00. 독립 QA 대기 | 이 문서 8절 |
+| `A11Y-001` | 2026-11-09 | DEV | 핵심 흐름 접근성·실수 방지 UX, axe serious·critical 0, Lighthouse 접근성 1.00. REL-001 독립 QA PASS | 이 문서 9절 |
+| `PERF-ASSET-001` | 2026-11-09 | DEV | 이미지·폰트·번들 예산 최적화, public 75.14 MB → 1.85 MB, Lighthouse 0.96~1.00. REL-001 독립 QA PASS | 이 문서 8절 |
 | `QA-INFRA-001` | 2026-11-09 | QA_DEVOPS | 테스트 포함 타입 검사, Vitest 121개, Playwright 11개, 커버리지·CI 기반 | 이 문서 7절 |
-| `STAB-002` | 2026-11-09 | DEV | v2.3.1 P1 데이터·경제·표시 정합 안정화, 자체 검증 완료. 독립 QA 대기 | 이 문서 6절 |
+| `STAB-002` | 2026-11-09 | DEV | v2.3.1 P1 데이터·경제·표시 정합 안정화, REL-001 독립 QA PASS | 이 문서 6절 |
 | `STAB-001` | 2026-08-21 | QA | v2.3.1 경제·FSM·암시장 계약 안정화, QA 최종 `DONE` | [`v2.3.1/STAB-001.md`](./v2.3.1/STAB-001.md) |
 | `DOC-002` | 2026-11-08 | PM | 구 `docs/`를 `.md/`로 이관하고 `docs/` 삭제 | 이 문서 3절 |
 
@@ -157,17 +160,18 @@ PM이 `.md/root/TASKS.md`의 `REL-001`로 v2.3.1 릴리즈 승인 여부를 판�
 ## 5. Phase 01 종료 상태
 
 - `STAB-001`: DONE
-- `STAB-002`: DEV_COMPLETE (독립 QA 대기)
+- `STAB-002`: DONE (REL-001 독립 QA PASS)
 - `QA-INFRA-001`: DONE
-- `PERF-ASSET-001`: DEV_COMPLETE (독립 QA 대기)
-- `A11Y-001`: DEV_COMPLETE (독립 QA 대기)
+- `PERF-ASSET-001`: DONE (REL-001 독립 QA PASS)
+- `A11Y-001`: DONE (REL-001 독립 QA PASS)
 - `REPO-001`: DONE
 - `DOC-002`: DONE
 - `DOC-003`: DONE
 - `QA-REBASE-001`: DONE
-- v2.3.1: `RELEASE_CANDIDATE`
-- Phase 3: `BLOCKED`
-- 다음 판단: `REL-001`
+- `REL-001`: DONE — v2.3.1 `PM_RELEASE_APPROVED`
+- v2.3.1: `PM_RELEASE_APPROVED`
+- Phase 3: `BLOCKED` (서버 계약·범위 결정 대기)
+- 다음 판단: 릴리즈 실행(태그·배포) 및 잔여 수동·환경 검증
 
 ---
 
@@ -447,3 +451,46 @@ PM이 `.md/root/TASKS.md`의 `REL-001`로 v2.3.1 릴리즈 승인 여부를 판�
   - 상태 변경: `QA-REBASE-001` `[ ] -> [x]`. 7번째 P1 TASK 완료.
   - 다음 시작 지점: PM이 `QA_TRACEABILITY.md`의 판정과 잔여 리스크를 확인한 뒤 `REL-001`을 재판정한다.
   - 참고: `.md/specs/QA_TRACEABILITY.md`, `.md/specs/QA_TEST_PLAN.md`, `.md/specs/PRD.md`, `tests/qa-rebase-001.test.ts`, `tests/stab-001.test.ts`, `tests/e2e/`
+
+---
+
+## 13. REL-001 상세 — v2.3.1 릴리즈 승인 판정
+
+- [x] `REL-001` **v2.3.1 릴리즈 승인 판정** — P1, Phase 01 — DONE
+  - 진행 순서: 8번째 (`QA-REBASE-001` 완료 후)
+  - 목표: 완료 TASK, 사용자 확인 범위, 미검증 제한사항을 종합해 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED` 또는 보류 사유를 결정한다.
+  - 담당: PM.
+  - 선행: `STAB-001` `DONE`, 1~7번째 TASK 완료, `QA_TRACEABILITY.md`의 잔여 리스크 확인, `STAB-002`·`PERF-ASSET-001`·`A11Y-001` 독립 QA.
+  - DoD:
+    - 승인 시 `.md/root/TASKS.md`와 `.md/specs/PROJECT_STATE.md`의 마일스톤을 `PM_RELEASE_APPROVED`로 갱신한다.
+    - 독립 QA 결과와 잔여 제한을 릴리즈 판정에 반영한다.
+    - 실제 태그·배포는 승인과 분리해 기록한다.
+  - 사전 독립 QA (2026-11-09 / QA_DEVOPS):
+    - `npm.cmd test`: 22개 파일 146개 테스트 통과, 실패·skip·xfail 0.
+    - `npm.cmd run typecheck`: 테스트 포함 0오류.
+    - `npm.cmd run test:coverage`: 문장 71.97%, 분기 57.48%, 함수 63.27%, 줄 74.17%.
+    - `npm.cmd run test:e2e`: Playwright Chromium 19개 통과. 접근성·키보드 표적 10개 통과.
+    - `npm.cmd run check:assets`: public 1,846.9 KB, 이미지 104개, 개별 300 KB 이하.
+    - `npm.cmd run perf:transfer`: 로비 451 KiB, 경매 진입 추가 177 KiB.
+    - `npm.cmd run build`: 통과. 메인 JS 274.07 kB, CSS 52.52 kB.
+    - `npm.cmd audit` 전체·프로덕션: 0 vulnerabilities.
+    - 임시 독립 테스트 19개로 `QD-01`~`QD-09`를 실제 store/service에서 재현해 전부 통과. 테스트 파일은 검증 후 삭제했고 작업 트리는 clean.
+  - 판정:
+    - `STAB-002` PASS — P1 9건과 동반 P2, P0/P1 미해결 0건.
+    - `PERF-ASSET-001` PASS — public·로비·경매 예산 이내.
+    - `A11Y-001` PASS — axe serious·critical 0, 키보드·확인 모달·reduced-motion·오디오 영속화.
+    - v2.3.1을 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED`로 승인한다.
+  - 잔여 제한:
+    - 실제 스크린리더(NVDA·VoiceOver) 수동 검증.
+    - Firefox·WebKit·다중 브라우저·다중 모바일 반복.
+    - Vercel pause 해제 후 실제 CDN·압축·보안 헤더.
+    - 장시간 랜덤·타이머 반복, Lighthouse 접근성·성능의 QA_DEVOPS 독립 재실행.
+    - 실제 2탭 동시성, 경찰·비밀봉투·감정·복원·위탁 모달의 개별 axe 반복.
+  - 비차단 관찰:
+    - 더치 진행 중 저장 실패 시 `returnToLobby`가 틱 엔진을 먼저 정지하는 P2.
+    - `finishGame` 저장 실패 시 VICTORY BGM이 먼저 재생되는 P3.
+    - 금액 필드가 유한 소수를 허용하는 P3.
+    - 모두 정상 플레이 밖이거나 새로고침 복구가 가능해 릴리즈 차단으로 보지 않는다.
+  - 상태 변경: `REL-001` `[ ] -> [x]`. 마일스톤 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` DEV_COMPLETE -> DONE(QA_VERIFIED).
+  - 다음 시작 지점: 태그·릴리즈 노트·배포 실행 여부를 결정한다. Phase 3 `ARCH-PVP-001`은 서버 계약·제품 범위 승인 후 착수한다.
+  - 참고: `.md/specs/PROJECT_STATE.md`, `.md/specs/QA_TRACEABILITY.md`, `.md/specs/QA_TEST_PLAN.md`, `.md/specs/ARCHITECTURE.md`, `.md/specs/MIGRATIONS.md`, `.md/root/FEATURES.md`

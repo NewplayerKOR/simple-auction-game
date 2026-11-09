@@ -68,7 +68,7 @@
 
 ### 📌 `V2.3.1-STAB002__persist_market_rates_and_harden_profile_recovery`
 
-- **상태:** Runtime Implemented / DEV Verified (STAB-002) — TypeScript·LocalStorage 런타임과 DEV 회귀 테스트에 반영했다. 실제 DB 마이그레이션이 아니며 독립 QA는 남아 있다.
+- **상태:** Runtime Implemented / QA_VERIFIED (STAB-002, REL-001) — TypeScript·LocalStorage 런타임과 DEV 회귀 테스트에 반영했고, REL-001 사전 독립 QA에서 `QD-01`~`QD-09`를 재검증했다. 실제 DB 마이그레이션은 아니다.
 - **대상 TASK:** `STAB-002` `QD-01`~`QD-09`, `QD-31`~`QD-36`
 - **적용 변경:**
   1. `PersistentCareerProfile.marketRates?: CategoryMarketRates`를 추가해 새로고침 후에도 카테고리 시세를 유지한다.
