@@ -131,7 +131,7 @@
 
 | 항목 | 상태 | 다음 확인 |
 | :--- | :--- | :--- |
-| `REL-001` v2.3.1 릴리즈 승인 | **APPROVED** | 2026-11-09 `PM_RELEASE_APPROVED`. 실제 태그·배포는 별도 실행 |
+| `REL-001` v2.3.1 릴리즈 승인 | **APPROVED** | 2026-11-09 `PM_RELEASE_APPROVED`, v2.3.1 1차 완성. 실제 태그·배포는 선택 실행 |
 | `STAB-002` 독립 QA_DEVOPS 재검증 | **PASS** | REL-001 사전 검증에서 `QD-01`~`QD-09`를 실제 store/service로 재현. 임시 테스트 삭제 후 작업 트리 clean |
 | `PERF-ASSET-001`·`A11Y-001` 독립 QA | **PASS** | public 1,846.9 KB, 로비 451 KiB, 경매 추가 177 KiB, axe serious·critical 0, 키보드 E2E 10개 |
 | 실제 스크린리더(NVDA·VoiceOver) | MANUAL | 릴리즈 후 수동 확인 |

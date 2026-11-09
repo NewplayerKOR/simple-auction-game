@@ -80,6 +80,7 @@
 - Phase 및 작업 ID: 첫 Phase는 01이며 프로젝트 진행에 따라 증가시킨다. 작업마다 프로젝트 내 고유 작업 ID·Phase·담당·목표·완료 기준(DoD)을 명시하고, 보관 후에도 작업 ID를 변경하거나 재사용하지 않는다.
 - 보관 시점: Phase 전체 완료를 기다리지 않고 각 작업 완료 시 해당 Phase 파일에 원문을 보관한다. TASKS.md에는 최근 완료 요약을 완료 시각 내림차순으로 최대 5개 유지한다. 초과 요약을 제거해도 보관 원문은 유지한다.
 - `.md/root/FEATURES.md`: 구현·검증된 사용자 기능의 현재 명세와 중요한 변경 요약. 기능 추가뿐 아니라 버그 수정으로 사용자 동작·API 계약이 바뀐 경우에도 기존 명세를 갱신한다. 작업 원문과 상세 검증 이력은 Phase별 보관 파일에 유지한다.
+- 루트 `README.md`: 프로젝트 소개. 루트 `DEVELOPMENT.md`: 설치·검증·배포 절차. README에는 명령을 중복하지 않고 `DEVELOPMENT.md`로 연결한다.
 - `.md/specs/PROJECT_STATE.md`: 현재 확인된 구현·검증·제한·다음 판단만 기록한다.
 - `.md/specs/PRD.md`: 제품 요구사항과 인수 기준. `.md/specs/DECISIONS.md`: 제품·기술·거버넌스 결정.
 - `.md/specs/`: PROJECT_STATE, PRD, DECISIONS, ARCHITECTURE, DATA_SCHEMA, MIGRATIONS, DEV_GUIDELINE, QA_TEST_PLAN, ART_ASSET_SPEC, SOUND_SPEC, GLOSSARY.
@@ -120,7 +121,7 @@
 - 프로젝트명: Simple Auction Game
 - 한 줄 요약: 싱글플레이 경매 경제 시뮬레이션 웹 게임
 - 현재 런타임·패키지 버전: `2.3.1`
-- 현재 마일스톤: v2.3.1 `PM_RELEASE_APPROVED` — 릴리즈 실행 전
+- 현재 마일스톤: v2.3.1 1차 완성 (`PM_RELEASE_APPROVED`) — 이후 유지보수·확장 단계
 - 핵심 기술 스택:
   - Language / Runtime: TypeScript, React 18, Vite, Node.js 26 이상
   - Framework / Library: React, Zustand, Tailwind CSS, Vitest, Web Audio API
@@ -129,7 +130,7 @@
   - Run: `npm run dev`
   - Test: `npm test`
   - Build: `npm run build`
-- 설치·검증·배포 절차의 권위 문서: [`README.md`](../../README.md)
+- 설치·검증·배포 절차의 권위 문서: [`DEVELOPMENT.md`](../../DEVELOPMENT.md)
 - 현재 상태와 검증 증거: `.md/specs/PROJECT_STATE.md`
 
 ---

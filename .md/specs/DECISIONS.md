@@ -3,7 +3,7 @@
 > 요구사항·설계·운영 충돌을 대화 기억에 맡기지 않고 문서로 고정한다.  
 > **활성 문서 체계:** `.md`  
 > **소유:** PM  
-> **최종 수정일:** 2026-11-08
+> **최종 수정일:** 2026-11-09
 
 ## 상태 정의
 
@@ -28,6 +28,7 @@
 | `DEC-010` | APPROVED | 감정 비용의 권위 | 아이템별 `appraisalCost`를 사용하고 상수는 fallback으로만 사용 | 감정, UI, 데이터 |
 | `DEC-011` | APPROVED | 보존 상태·잭팟 평가 | 세션·보관함·위탁·결과 화면에 단일 평가 계약을 적용 | 경제, 결과, 위탁, 도감 |
 | `DEC-012` | APPROVED | 런타임·배포 경로 | Node.js 26 이상을 고정하고 `VITE_BASE_PATH`로 루트·하위 경로 배포를 지원 | 빌드, CI, 배포 |
+| `DEC-013` | APPROVED | v2.3.1 1차 완성과 이후 단계 | v2.3.1을 1차 완성으로 기록하고 이후 작업은 유지보수·확장으로 분류 | TASKS, PROJECT_STATE, README, ARCH-PVP-001 |
 | `GOV-001` | APPROVED | 문서 체계 단일화 | `.md/`를 유일한 활성 문서 체계로 사용하고 `docs/`는 이관 후 삭제 | 문서·세션 라우팅 |
 | `GOV-002` | APPROVED | `DONE` 권한 | TASK `DONE`은 모든 역할군이 가능. DoD와 검증 증거 필수 | 작업 거버넌스 |
 | `GOV-003` | APPROVED | 활성 역할 체계 | PM, DEV, QA_DEVOPS 3역할. `ARCH_DATA` 책임은 DEV의 기술 명세와 PM의 제품 결정으로 분배 | 역할·인계 절차 |
@@ -206,6 +207,17 @@
 - **선택 이유:** Node 26은 보안 패치와 현재 로컬·CI 기준을 통일한다. `VITE_BASE_PATH`와 `assetUrl()` 조합은 루트·하위 경로를 같은 소스로 지원하고, Vite의 HTML·CSS 변환과 충돌하지 않는다.
 - **영향:** `package.json`, `.nvmrc`, `.github/workflows/qa.yml`, `vite.config.ts`, `src/services/assetService.ts`, `src/data/`, `index.html`, `vercel.json`, `README.md`, `REPO-001`.
 - **후속 검증:** fresh clone `npm ci`→typecheck→test→build, 루트·하위 경로 preview 404 0, Lighthouse SEO 1.00, `npm audit` 0건. Vercel 실제 배포는 프로젝트 재개 후 확인한다.
+
+### DEC-013: v2.3.1 1차 완성과 이후 단계
+
+- **상태:** APPROVED
+- **결정일:** 2026-11-09
+- **결정자:** 사용자 지시 / PM 반영
+- **문제:** `REL-001` 승인 후 프로젝트를 종료로 볼지, 이후 작업을 어떤 기준으로 분류할지 정해야 한다.
+- **결정:** v2.3.1을 Phase 01의 **1차 완성**으로 기록한다. 프로젝트를 종료하지 않고 이후 작업은 **유지보수·확장**으로 분류한다. Phase 3 실시간 PvP는 1차 완성 범위에 포함하지 않으며, 별도 제품 범위와 서버 계약 승인 전에는 착수하지 않는다. 실제 태그·배포는 승인과 분리해 실행한다.
+- **검토한 대안:** v2.3.1을 최종 종료로 선언, Phase 3 PvP를 즉시 다음 단계로 확정, 릴리즈 승인과 동시에 배포까지 완료.
+- **선택 이유:** 현재 싱글플레이 제품은 기능·QA·릴리즈 승인을 완료했다. PvP와 운영 개선은 별도 범위로 분리해야 1차 완성 상태를 훼손하지 않고 유지보수·확장 우선순위를 정할 수 있다.
+- **영향:** `TASKS`, `PROJECT_STATE`, `FEATURES`, `README`, `ARCH-PVP-001`.
 
 ### GOV-001: 문서 체계 단일화
 

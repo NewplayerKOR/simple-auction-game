@@ -64,8 +64,8 @@ try {
   const robotsBody = await robotsResponse.text();
   if (!robotsResponse.ok()) {
     failures.push(`robots.txt ${robotsResponse.status()} ${robotsUrl}`);
-  } else if (/^\s*Disallow:\s*\/\s*$/im.test(robotsBody)) {
-    failures.push('robots.txt가 전체 크롤링을 차단함');
+  } else if (!/^\s*User-agent:\s*\*\s*$/im.test(robotsBody)) {
+    failures.push('robots.txt에 User-agent 규칙이 없음');
   }
 
   await page.getByText("SOTHEBY'S ROYALE").first().waitFor({ timeout: 10_000 });

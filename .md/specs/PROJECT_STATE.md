@@ -4,8 +4,8 @@
 > **기준일:** 2026-11-09
 > **활성 문서 체계:** `.md`  
 > **런타임·패키지 버전:** `2.3.1`  
-> **현재 마일스톤:** v2.3.1 `PM_RELEASE_APPROVED`
-> **다음 판단:** 릴리즈 실행(태그·배포) 여부와 잔여 수동·환경 검증
+> **현재 마일스톤:** v2.3.1 1차 완성 (`PM_RELEASE_APPROVED`)
+> **다음 판단:** 유지보수·확장 후보 검토 및 선택적 릴리즈 실행
 
 ## 1. 확인된 구현 범위
 
@@ -198,7 +198,7 @@
 - `A11Y-001`은 독립 QA PASS다. axe serious·critical 0건, 키보드 5라운드, 확인 모달·reduced-motion·오디오 영속화를 재현했다. 실제 스크린리더·다중 브라우저는 잔여다.
 - `REPO-001`은 완료했다. Node 26·CI·배포 위생, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00을 확인했다. Vercel 프로젝트는 사용자가 pause 상태로 두어 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다.
 - `QA-REBASE-001`은 완료했다. 최종 추적성 매트릭스와 음수 종료 잔액·6종 저주 개별 테스트를 추가했고, 자동화 기준 P0/P1 미커버 요구사항은 0건이다.
-- v2.3.1은 `PM_RELEASE_APPROVED`다. 1~7번째 TASK와 독립 QA를 완료했고, 잔여 수동·환경 검증은 릴리즈 후 추적한다. 실제 태그·배포는 별도 실행이다.
+- v2.3.1은 `PM_RELEASE_APPROVED`이자 Phase 01의 **1차 완성**이다. 프로젝트를 종료하지 않고 이후 작업은 유지보수·확장으로 분류한다. (DEC-013) 잔여 수동·환경 검증은 릴리즈 후 추적하고, 실제 태그·배포는 별도 실행이다.
 
 ## 5. 알려진 제한사항과 미검증 범위
 
@@ -231,24 +231,26 @@
 - `DOC-003`: `[x]` DONE — 스키마·아키텍처·추적성·README 정합, 소스 주석 3줄 DEV 정정
 - `QA-REBASE-001`: `[x]` DONE — PRD REQ↔TC↔테스트 최종 매트릭스, 음수 종료 잔액·6종 저주 개별 테스트, 수동 S4 의존 정리
 - `REL-001`: `[x]` DONE — v2.3.1 `PM_RELEASE_APPROVED`, 독립 QA PASS와 잔여 제한 기록
+- 프로젝트 단계: **1차 완성** — 이후 작업은 유지보수·확장 후보로 분류 (`DEC-013`)
 - `ARCH-PVP-001`: `[!]` 블로커 — `REL-001` 승인 완료. Phase 3 서버 계약·제품 범위 승인 후 착수
 - Phase 3 실시간 PVP: 서버 계약·제품 범위 승인 전 착수 금지
 
 ## 7. 다음 시작 지점
 
-1. PM: v2.3.1 `PM_RELEASE_APPROVED` 상태를 기준으로 태그·릴리즈 노트·배포 실행 여부를 결정한다. 실행 시 `README.md` 6절 절차를 따른다.
-2. QA_DEVOPS·PM: 실제 스크린리더, Firefox·WebKit, Vercel 재개 후 CDN·보안 헤더, 장시간 랜덤·타이머 반복을 잔여 검증으로 추적한다.
-3. DEV·PM: `ARCH-PVP-001`은 Phase 3 서버 계약·제품 범위를 승인한 뒤 착수한다. `REL-001` 승인 자체는 완료됐다.
-4. DEV: REL-001 독립 QA의 P2/P3 관찰(더치 저장 실패 틱 정지, VICTORY BGM 선재생, 금액 소수 허용)과 `QD-28`(시드 기반 RNG·세션 이벤트 로그)을 후속 후보로 검토한다.
+1. PM: v2.3.1을 Phase 01의 1차 완성으로 유지하고, 이후 작업은 유지보수·확장 후보로 분류한다. (`DEC-013`)
+2. PM: 필요하면 태그·릴리즈 노트·배포를 별도 실행한다. 실행 시 [`DEVELOPMENT.md`](../../DEVELOPMENT.md) 6절 절차를 따른다.
+3. QA_DEVOPS·PM: 실제 스크린리더, Firefox·WebKit, Vercel 재개 후 CDN·보안 헤더, 장시간 랜덤·타이머 반복을 잔여 검증으로 추적한다.
+4. DEV·PM: `ARCH-PVP-001`은 Phase 3 서버 계약·제품 범위를 승인한 뒤 착수한다. REL-001 독립 QA의 P2/P3 관찰과 `QD-28`도 확장 후보로 검토한다.
 5. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
 
 ## 8. 문서 권위와 이관
 
 - 활성 문서 체계는 `.md/`다.
+- 프로젝트 소개: [`README.md`](../../README.md)
 - 제품 요구사항: `.md/specs/PRD.md`
 - 결정 로그: `.md/specs/DECISIONS.md`
 - 작업 보드: `.md/root/TASKS.md`
 - 기능 명세: `.md/root/FEATURES.md`
 - 기술 명세: `.md/specs/`
-- 실행·검증·배포 절차: [`README.md`](../../README.md)
+- 실행·검증·배포 절차: [`DEVELOPMENT.md`](../../DEVELOPMENT.md)
 - 구 `docs/`는 2026-11-08 이관 후 삭제했다. 이관 전 상세 이력은 Git 커밋과 `.md/root/archive/TASKS_PHASE_01.md`에 보존한다.

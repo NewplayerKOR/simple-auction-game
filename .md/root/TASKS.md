@@ -8,24 +8,26 @@
 
 | 마일스톤 | 판정 | 비고 |
 | :--- | :---: | :--- |
-| Phase 01: v2.3.1 안정화 | `PM_RELEASE_APPROVED` | `STAB-001` QA `DONE`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` 독립 QA PASS. `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` DONE. `REL-001` 승인 |
+| Phase 01: v2.3.1 안정화 | `PM_RELEASE_APPROVED` | **1차 완성**. `STAB-001` QA `DONE`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` 독립 QA PASS. `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` DONE. `REL-001` 승인. 이후 유지보수·확장 단계 (DEC-013) |
 | Phase 02: 실시간 멀티플레이 PVP | `BLOCKED` | Phase 01 승인 완료. 서버 권위 설계·Phase 3 범위 승인 전 착수 금지 |
 | Phase 00: Phase 1·2·2.5 | `ARCHIVED` | 상세 증거가 없는 과거 티켓 범위. 현재 릴리즈 근거로 사용하지 않음 |
+
+> **프로젝트 단계:** v2.3.1은 1차 완성이다. 이후 작업은 유지보수·확장으로 분류하며, Phase 3 PvP는 별도 제품 범위·서버 계약 승인 전 착수하지 않는다. (`DEC-013`)
 
 ## 2. Active Tasks (진행 중인 작업)
 
 (현재 진행 중인 작업 없음)
 
-## 3. Backlog (대기 중인 작업)
+## 3. Backlog (유지보수·확장 후보)
 
-> **진행 순서:** 1번째 `STAB-002` 완료 → 2번째 `QA-INFRA-001` 완료 → 3번째 `PERF-ASSET-001` 완료 → 4번째 `A11Y-001` 완료 → 5번째 `REPO-001` 완료 → 6번째 `DOC-003` 완료 → 7번째 `QA-REBASE-001` 완료 → 8번째 `REL-001` 완료 → 9번째 `ARCH-PVP-001`
+> **진행 순서:** 1번째 `STAB-002` 완료 → 2번째 `QA-INFRA-001` 완료 → 3번째 `PERF-ASSET-001` 완료 → 4번째 `A11Y-001` 완료 → 5번째 `REPO-001` 완료 → 6번째 `DOC-003` 완료 → 7번째 `QA-REBASE-001` 완료 → 8번째 `REL-001` 완료 → 9번째 `ARCH-PVP-001`(확장 후보)
 > 8번째 `REL-001`은 독립 QA PASS와 잔여 제한을 반영해 `PM_RELEASE_APPROVED`로 승인했다. 실제 태그·배포는 별도 릴리즈 실행이다.
-> `ARCH-PVP-001`은 `REL-001` 승인 조건을 충족했지만 Phase 3 서버 계약·범위 결정 전 착수하지 않는다.
+> `ARCH-PVP-001`은 `REL-001` 승인 조건을 충족했지만 Phase 3 서버 계약·제품 범위 결정 전 착수하지 않는다. `QD-28`과 P2/P3 관찰도 유지보수·확장 후보로 남긴다.
 
 ### [DEV]
 
 - [!] `ARCH-PVP-001` **서버 권위형 Phase 3 사전 아키텍처** — P2, Phase 02
-  - 진행 순서: 9번째 (Phase 02, `REL-001` 승인 완료)
+  - 진행 순서: 9번째 (Phase 02 확장 후보, `REL-001` 승인 완료)
   - 목표: 서버 권위 FSM, 자금 원장, 재접속·재동기화, 결정론적 이벤트 로그의 사전 계약을 정리한다.
   - 블로커: Phase 3 서버 계약과 제품 범위 결정이 필요하다. `REL-001` 승인 조건은 충족했다.
   - 다음 담당: DEV가 기술 대안을 정리하고 PM이 제품 범위를 승인한다.
@@ -168,3 +170,14 @@
 - 변경한 파일: `.md/root/TASKS.md`, `.md/root/archive/TASKS_PHASE_01.md`, `.md/specs/PROJECT_STATE.md`, `.md/specs/QA_TEST_PLAN.md`, `.md/specs/QA_TRACEABILITY.md`, `.md/specs/ARCHITECTURE.md`, `.md/specs/MIGRATIONS.md`, `.md/root/FEATURES.md`.
 - 상태 변경: `REL-001` `[ ] -> [x]` DONE, 마일스톤 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001`은 독립 QA PASS를 반영해 `DEV_COMPLETE -> DONE(QA_VERIFIED)`로 갱신했다.
 - 다음 시작 지점: v2.3.1 태그·배포 실행 여부를 결정하고, Phase 3 `ARCH-PVP-001`은 서버 계약·제품 범위 승인 후 착수한다. 잔여 수동·환경 검증은 릴리즈 후에도 추적한다.
+
+### 2026-11-09 / PM / 1차 완성 전환 및 README·robots 정리
+
+- 확인한 사실: 사용자 지시로 v2.3.1을 종료가 아닌 Phase 01의 1차 완성으로 기록하고, 이후 작업은 유지보수·확장으로 분류했다. 기존 README는 설치·검증·배포 명령이 중심이어서 프로젝트 소개 문서로 적합하지 않았고, 상세 절차를 분리할 필요가 있었다. `public/robots.txt`는 전체 허용 상태였으며, `scripts/verify-deployment.mjs`는 전체 크롤링 차단을 오히려 실패로 처리하고 있었다.
+- 변경한 파일: `.md/specs/DECISIONS.md`(`DEC-013`), `.md/root/TASKS.md`, `.md/specs/PROJECT_STATE.md`, `.md/root/FEATURES.md`, `.md/root/AGENTS.md`, `.md/specs/DEV_GUIDELINE.md`, `README.md`, `DEVELOPMENT.md`(신규), `public/robots.txt`, `scripts/verify-deployment.mjs`(DEV 수정).
+- 실행한 명령: `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run build`, `node --check scripts/verify-deployment.mjs`, `npm.cmd run verify:deploy -- http://127.0.0.1:4180/`, 문서 링크·UTF-8 검사, `dist/robots.txt` 복사 확인.
+- 결과: Vitest 22개 파일 146개 테스트 통과, typecheck 0오류, production build 통과. `verify:deploy`는 20 requests·이미지 10개·failures 0으로 통과했다. README를 게임 소개·기술 스택·현재 상태·문서 링크 중심으로 재작성했고, 설치·검증·배포 명령은 `DEVELOPMENT.md`로 분리했다. `robots.txt`는 `User-agent: *`와 주요 AI 크롤러에 `Disallow: /`를 적용했으며, `verify:deploy`는 robots.txt 응답과 `User-agent: *` 존재를 확인하도록 조정했다.
+- 미검증 범위: 실제 Vercel 배포·CDN에서의 크롤러 차단과 자원 사용량 변화는 미확인이다. `robots.txt`는 규칙을 따르는 크롤러에만 효력이 있으며, 비협조 봇·직접 요청은 Vercel 방화벽·속도 제한이 필요하다.
+- 결함·충돌: robots.txt의 전체 차단 정책과 기존 `verify:deploy`의 전체 차단 실패 규칙이 충돌해 DEV가 검증 규칙을 수정했다. README와 `DEVELOPMENT.md`의 역할을 분리하고, 기존 문서의 README 절차 링크를 `DEVELOPMENT.md`로 갱신했다.
+- 상태 변경: v2.3.1을 **1차 완성**으로 기록(`DEC-013`). 이후 작업은 유지보수·확장 후보로 유지한다.
+- 다음 시작 지점: 유지보수·확장 후보 검토, 선택적 태그·배포 실행, 실제 Vercel 크롤러·자원 사용량 확인.
