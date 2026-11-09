@@ -3,9 +3,9 @@
 > **상태:** ACTIVE  
 > **기술 소유:** DEV  
 > **제품 정책 승인:** PM  
-> **기준일:** 2026-11-08  
+> **기준일:** 2026-11-09  
 > **적용 버전:** v2.3.1  
-> **상세 원문:** [`../root/archive/v2.3.1/STAB-001.md`](../root/archive/v2.3.1/STAB-001.md)
+> **상세 원문:** [`../root/archive/v2.3.1/STAB-001.md`](../root/archive/v2.3.1/STAB-001.md), [`../root/archive/TASKS_PHASE_01.md`](../root/archive/TASKS_PHASE_01.md) `STAB-002`
 
 ## 1. 목적
 
@@ -59,10 +59,13 @@ Codex / Result UI
 
 ### 5.1 잉글리시 호가
 
-- 현재 최고가보다 높은 입찰만 허용한다.
+- 현재 최고가보다 높은 정수 입찰만 허용한다. `NaN`, 무한대, 소수는 거부한다. (QD-15)
 - 잔액보다 높은 입찰을 거부한다.
-- 종료 직전 입찰은 앤티 스나이핑 규칙으로 시간을 연장한다.
+- 최고 입찰자는 낙찰 예약액을 제외한 가용 현금으로만 감정 등 추가 지출을 할 수 있다. (QD-03)
+- 종료 직전 입찰은 앤티 스나이핑 규칙으로 시간을 연장한다. 스피드 해머 사용 후 본인 입찰은 타이머를 2초로 단축한다. (QD-24)
+- 타이머는 `timerDeadline`을 기준으로 남은 시간을 보정해 백그라운드 탭 스로틀링에도 실제 경과 시간을 반영한다. (QD-25)
 - 최고 입찰자가 없으면 유찰한다.
+- `nextRound`는 `ROUND_REVEAL`·`ROUND_PASSED`에서만 진행해 중복 클릭을 무시한다. (QD-26)
 - 라운드 종료 결과는 `roundResolutionId`당 한 번만 정산한다.
 
 ### 5.2 4R 비밀 봉투
@@ -113,9 +116,9 @@ IDLE -> RAIDED -> RESOLVING -> ESCAPED | BRIBED_AND_WON | ARRESTED
 1. 입장 직전 `careerCash_before`를 읽는다.
 2. `sessionCash_start = careerCash_before - entryFee`를 계산하고 프로필에 같은 값을 저장한다.
 3. 경매 세션은 `sessionCash_start`를 시작 현금으로 사용한다.
-4. 정상 종료 시 `endingCash = player.cash - loanRepayment`를 계산한 뒤 종료 시 발동하는 저주를 한 번 반영한다.
+4. 종료 시 `endingCash = player.cash - loanRepayment`를 계산한 뒤 종료 시 발동하는 저주를 한 번 반영한다. `ESCAPED`도 같은 상환 순서를 적용한다. (DEC-009)
 5. `careerCash_after = endingCash_after_debuff`로 교체한다. 기존 `careerCash`와 더하지 않는다.
-6. 진품 아이템과 상태를 보관함에 합친 뒤 `careerNetWorth_after = careerCash_after + vaultTotalValue_after`로 재계산한다.
+6. 진품 아이템과 상태를 보관함에 합친 뒤 `careerNetWorth_after = careerCash_after + vaultTotalValue_after`로 재계산한다. 보존 상태·잭팟은 단일 평가 계약을 사용한다. (DEC-011)
 7. 파산·룸 게이팅·승급 판정은 같은 `careerCash_after`와 `careerNetWorth_after`만 사용한다.
 
 ### 6.2 결과별 커밋
@@ -123,7 +126,7 @@ IDLE -> RAIDED -> RESOLVING -> ESCAPED | BRIBED_AND_WON | ARRESTED
 | 결과 | 현금 | 이번 세션 아이템 | 게임 수·승리 | 티켓·정상 완주 |
 | :--- | :--- | :--- | :--- | :--- |
 | `NORMAL` | 최종 세션 잔액으로 교체 | 진품만 커밋 | 게임 수 +1, 1위면 승리 +1 | 티켓 규칙 적용 |
-| `ESCAPED` | 탈출 직전 확정 잔액으로 교체 | 급습 전 확정 아이템만 커밋 | 게임 수 +1, 승리 +0 | 지급 없음 |
+| `ESCAPED` | 탈출 직전 확정 잔액에서 대출 상환을 차감한 값으로 교체 | 급습 전 확정 아이템만 커밋 | 게임 수 +1, 승리 +0 | 지급 없음 |
 | `ARRESTED` | 0으로 교체 | 이번 세션 아이템 전부 폐기 | 게임 수 +1, 승리 +0 | 지급 없음 |
 | `ABANDONED` | 마지막 저장된 입장 후 커리어 현금 유지 | 커밋 없음 | 증가 없음 | 지급 없음 |
 
@@ -137,14 +140,18 @@ IDLE -> RAIDED -> RESOLVING -> ESCAPED | BRIBED_AND_WON | ARRESTED
 ## 7. 저장 계약
 
 - 저장 키: `SIMPLE_AUCTION_CAREER_V2`
+- 백업 키: `SIMPLE_AUCTION_CAREER_V2_BACKUP` — 새 저장 직전 원문과 손상 원문을 보관한다.
 - 저장 버전: `2.3.1`
-- `activeSession`: 최대 하나. 활성 세션이 있으면 새 룸 입장을 거부한다.
+- `activeSession`: 최대 하나. 활성 세션이 있으면 새 룸 입장을 거부한다. 다른 탭이 저장한 활성 세션도 입장을 차단한다.
 - `lastSettlementReceipt`: 마지막 정산의 `sessionId`, 결과, 종료 현금·순자산, 적용 시각을 보관한다.
 - `careerNetWorth`는 `careerCash + 보관함 평가액`이다.
 - `vaultItemIds`는 유효한 마스터 ID의 중복 없는 목록이다.
+- `marketRates`는 카테고리별 시세를 프로필에 함께 저장한다. 새로고침으로 `DUMP`를 회피할 수 없으며, 값이 없거나 손상되면 새 시세를 생성한다. (QD-07)
 - `blackVipTicketCount`와 통계 카운터는 0 이상의 정수다.
 - LocalStorage 한 키의 JSON 교체를 현재 런타임의 원자적 저장 경계로 사용한다. 실제 DB 트랜잭션 또는 서버 원장으로 표현하지 않는다.
 - v2.3.0 데이터는 현금·순자산·보관함·업적·티켓·통계를 보존하며 v2.3.1로 승격한다. 손상된 필수 필드는 안전 초기 상태로 복구하고 진단 로그를 남긴다.
+- 로드 시 `highestRoomTierUnlocked`, `vaultItemStates`, 업적 ID, 티켓·통계 카운터를 화이트리스트·정수 검증한다. `setItem` 실패는 유효 프로필을 초기값으로 대체하지 않는다.
+- `ErrorBoundary`가 렌더 오류를 포착해 백지 화면 대신 백업·초기화 화면을 제공한다. (QD-01)
 
 ## 8. 대체된 과거 계약
 
@@ -160,9 +167,9 @@ IDLE -> RAIDED -> RESOLVING -> ESCAPED | BRIBED_AND_WON | ARRESTED
 
 ## 9. 실패 처리
 
-- LocalStorage 저장 실패를 성공으로 간주하지 않는다. UI는 결과 전이를 보류하고 같은 식별자로 재시도할 수 있어야 한다.
-- 손상 데이터는 안전 초기화하되 진단 로그를 남긴다. 마이그레이션 가능한 v2.3.0 데이터는 초기화하지 않고 v2.3.1로 승격한다.
-- 저장 실패 강제 주입과 손상 데이터 전체 조합은 아직 독립 검증 범위가 아니다. 현재 상태는 `PROJECT_STATE.md`를 따른다.
+- LocalStorage 저장 실패를 성공으로 간주하지 않는다. `enterRoom`, `commitGameResult`, `finishGame`, `returnToLobby`, 경찰 탈출·체포는 저장 실패 시 화면 전이를 보류하고 `persistenceError`를 노출해 재시도할 수 있게 한다. (QD-02)
+- 손상 데이터는 안전 초기화하되 원문을 백업 키에 남기고 진단 로그를 기록한다. 마이그레이션 가능한 v2.3.0 데이터는 초기화하지 않고 v2.3.1로 승격한다.
+- DEV 자체 테스트는 저장 실패 주입, 손상 JSON, 잘못된 룸 티어, 구버전 프로필, `vaultItemStates`·업적 ID 오염을 고정했다. 독립 QA_DEVOPS 재검증은 `REL-001` 재판정 전에 수행한다. 현재 상태는 `PROJECT_STATE.md`를 따른다.
 
 ## 10. Phase 3 서버 권위 경계
 
@@ -175,3 +182,23 @@ Phase 3 실시간 멀티플레이는 다음 계약이 승인되기 전 구현하
 - 다중 탭·다중 클라이언트 동시성
 
 현재 LocalStorage 기반 구조를 서버 권위 구조로 표현하지 않는다. 관련 사전 작업은 `ARCH-PVP-001`이며 `REL-001` 승인 전 착수하지 않는다.
+
+## 11. 에셋·폰트 전달
+
+- 런타임 이미지는 `public/assets/images`의 실제 WebP 파일을 사용한다. 표시 크기별 변형은 `-256`·`-128`·`-64`·`-960` 접미사로 구분한다. (PERF-ASSET-001)
+- 공통 `AssetImage`는 `loading="lazy"`, `decoding="async"`, 실패 fallback을 기본 적용하고, 첫 화면 핵심 이미지만 `eager`로 예외 처리한다.
+- 배경은 CSS 클래스가 모바일 960×540과 데스크톱 1280×720 파일을 분기한다. 원본 1376×768보다 큰 해상도로 업스케일하지 않는다.
+- Cinzel 라틴 서브셋은 `public/assets/fonts`에서 자체 호스팅하고 `font-display: swap`을 사용한다. 한국어 본문은 시스템 폰트 스택을 사용하며 Google Fonts에 의존하지 않는다.
+- 경매·결과·도감·로비 모달은 `React.lazy`로 분할해 초기 로비 청크에서 제외한다.
+- 예산은 public 전체 5 MB, 초기 로비 500 KB, 경매 진입 추가 1.5 MB다. `npm run check:assets`·`npm run perf:transfer`와 Vitest·Playwright 검사로 회귀를 확인한다. 상세 측정값은 [`ART_ASSET_SPEC.md`](./ART_ASSET_SPEC.md) 5절을 따른다.
+
+## 12. 접근성·실수 방지 계약
+
+- 모든 모달은 `role="dialog"`, `aria-modal="true"`, `aria-labelledby`를 사용하고 `useModalA11y`로 초기 포커스·Tab 순환·Escape 닫기·이전 포커스 복귀를 처리한다. (A11Y-001)
+- 경찰 급습과 비밀 봉투 공개 전처럼 반드시 선택이 필요한 모달은 Escape로 우회하지 못하게 하고 포커스 트랩만 적용한다.
+- 경매 타이머는 10·5·3·2·1초에서만 live region으로 알리고, 입찰가는 최고가·입찰자 변경 시 알린다.
+- `prefers-reduced-motion: reduce`에서는 CSS 애니메이션·전환을 단축하고 confetti를 생략한다. 필수 텍스트 정보는 그대로 표시한다.
+- 경매 포기, 커리어·도감 초기화, 복원, 위탁 매각은 `ConfirmDialog`를 거친다. 확인 창의 기본 포커스는 취소 버튼이다.
+- 내부 마스터 ID는 UI에 직접 노출하지 않고 `getItemLotLabel`의 3자리 LOT 번호를 사용한다.
+- 오디오 설정은 `SIMPLE_AUCTION_AUDIO_V1`에 저장한다. 탭이 숨겨지면 BGM 타이머와 AudioContext를 중지하고, 다시 보일 때 이전 BGM만 재개한다.
+- 검증 기준은 axe serious·critical 0건, Lighthouse 접근성 0.95 이상, 키보드 전용 흐름 완주다. 현재 결과와 미검증 범위는 [`PROJECT_STATE.md`](./PROJECT_STATE.md)를 따른다.

@@ -6,10 +6,14 @@ import { useCodexStore } from '../../stores/useCodexStore';
 import { useCareerStore } from '../../stores/useCareerStore';
 import { MASTER_SYNERGIES } from '../../data/masterSynergies';
 import { ROOM_TIERS_MASTER } from '../../data/roomTiers';
+import { getSessionItemValue } from '../../services/itemValueService';
+import { assetUrl, assetSrcSet } from '../../services/assetService';
+import { prefersReducedMotion } from '../../services/motionService';
+import { AssetImage } from '../common/AssetImage';
 import { BankruptcyModal } from '../bankruptcy/BankruptcyModal';
 
 export const ResultGalleryView: React.FC = () => {
-  const { settlementSummary, returnToLobby } = useAuctionStore();
+  const { settlementSummary, returnToLobby, activeMarketEvent } = useAuctionStore();
   const { openCodexModal } = useCodexStore();
   const { profile } = useCareerStore();
   const [isBankruptcyModalOpen, setIsBankruptcyModalOpen] = useState(false);
@@ -18,8 +22,8 @@ export const ResultGalleryView: React.FC = () => {
   const isWinner = userRank?.rank === 1;
 
   useEffect(() => {
-    // 승리 시 화려한 골드 컨페티 발사
-    if (isWinner) {
+    // 승리 시 화려한 골드 컨페티 발사 (reduced-motion 환경에서는 생략)
+    if (isWinner && !prefersReducedMotion()) {
       confetti({
         particleCount: 150,
         spread: 90,
@@ -38,10 +42,10 @@ export const ResultGalleryView: React.FC = () => {
     );
   }
 
-  // 완성된 세트 시너지 목록 확인
-  const userItemIds = new Set(userRank.player.inventory.map((i) => i.id));
+  // 완성된 세트 시너지 목록 확인 (위작은 세트 조건에서 제외)
+  const genuineItemIds = new Set(userRank.player.inventory.filter((item) => !item.isFake).map((i) => i.id));
   const completedSynergies = MASTER_SYNERGIES.filter((syn) =>
-    syn.requiredItemIds.every((id) => userItemIds.has(id))
+    syn.requiredItemIds.every((id) => genuineItemIds.has(id))
   );
 
   const promotedConfig = settlementSummary.promotedTier
@@ -50,8 +54,7 @@ export const ResultGalleryView: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative selection:bg-gold-500 selection:text-navy-950"
-      style={{ backgroundImage: `url('/assets/images/backgrounds/bg_museum_gallery.webp')` }}
+      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative selection:bg-gold-500 selection:text-navy-950 bg-gallery-pattern"
     >
       {/* Dark Luxury Overlay */}
       <div className="absolute inset-0 bg-navy-950/85 backdrop-blur-[3px]" />
@@ -153,8 +156,12 @@ export const ResultGalleryView: React.FC = () => {
                 return (
                   <div key={achId} className="p-4 rounded-2xl bg-navy-950/90 border border-gold-500/40 flex items-center gap-3 shadow-md">
                     {ach.badgeImageUrl ? (
-                      <img
+                      <AssetImage
                         src={ach.badgeImageUrl}
+                        srcSet={assetSrcSet(ach.badgeImageUrl, 256, '-128', 128)}
+                        sizes="48px"
+                        width={256}
+                        height={256}
                         alt={ach.title}
                         className="w-12 h-12 rounded-xl object-contain border border-gold-500/40 shadow-sm"
                       />
@@ -210,8 +217,12 @@ export const ResultGalleryView: React.FC = () => {
                         {r.rank === 1 ? '🥇 1위' : r.rank === 2 ? '🥈 2위' : r.rank === 3 ? '🥉 3위' : `${r.rank}위`}
                       </td>
                       <td className="py-3.5 px-4 flex items-center gap-3">
-                        <img
+                        <AssetImage
                           src={r.player.avatar}
+                          srcSet={assetSrcSet(r.player.avatar, 128, '-64', 64)}
+                          sizes="32px"
+                          width={128}
+                          height={128}
                           alt={r.player.name}
                           className="w-8 h-8 rounded-full object-cover border-2 border-slate-700 shadow-sm"
                         />
@@ -284,21 +295,33 @@ export const ResultGalleryView: React.FC = () => {
                   className="bg-navy-900/80 border border-gold-500/30 rounded-3xl p-4 flex flex-col justify-between space-y-3 shadow-xl hover:border-gold-400 transition-all group"
                 >
                   <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 relative">
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <AssetImage
+                      src={item.imageUrl}
+                      srcSet={assetSrcSet(item.imageUrl, 512, '-256', 256)}
+                      sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
+                      width={512}
+                      height={512}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     
                     {/* Stamp Overlays in Museum Room */}
                     {item.isFake ? (
                       <div className="absolute inset-0 bg-red-950/60 flex items-center justify-center p-2">
-                        <img
-                          src="/assets/images/ui/stamp_fake.webp"
+                        <AssetImage
+                          src={assetUrl('/assets/images/ui/stamp_fake.webp')}
+                          width={256}
+                          height={256}
                           alt="위작"
                           className="w-24 h-24 object-contain drop-shadow-xl -rotate-12"
                         />
                       </div>
                     ) : (
                       <div className="absolute bottom-2 right-2">
-                        <img
-                          src="/assets/images/ui/stamp_genuine.webp"
+                        <AssetImage
+                          src={assetUrl('/assets/images/ui/stamp_genuine.webp')}
+                          width={256}
+                          height={256}
                           alt="진품"
                           className="w-14 h-14 object-contain drop-shadow-lg"
                         />
@@ -311,7 +334,7 @@ export const ResultGalleryView: React.FC = () => {
                     <div className="flex justify-between items-center text-xs mt-2 pt-2 border-t border-slate-800">
                       <span className="text-slate-400">최종 가치</span>
                       <span className={`font-mono font-black ${item.isFake ? 'text-red-400' : 'text-emerald-400'}`}>
-                        ${item.realValue.toLocaleString()}
+                        ${getSessionItemValue(item, activeMarketEvent).toLocaleString()}
                       </span>
                     </div>
                   </div>

@@ -1,3 +1,4 @@
+import { assetUrl } from '../services/assetService';
 import { Player } from '../types';
 
 export const MASTER_BOTS: Omit<Player, 'cash' | 'chanceCards' | 'hasTakenLoan' | 'loanRepaymentAmount' | 'inventory'>[] = [
@@ -7,7 +8,7 @@ export const MASTER_BOTS: Omit<Player, 'cash' | 'chanceCards' | 'hasTakenLoan' |
     isHuman: false,
     persona: 'WARREN',
     personaTitle: '현명한 가치투자의 대가',
-    avatar: '/assets/images/avatars/avatar_warren.webp',
+    avatar: assetUrl('/assets/images/avatars/avatar_warren.webp'),
     favoriteCategory: 'ANTIQUE',
     dialogues: {
       roundStart: [
@@ -43,7 +44,7 @@ export const MASTER_BOTS: Omit<Player, 'cash' | 'chanceCards' | 'hasTakenLoan' |
     isHuman: false,
     persona: 'DOGE',
     personaTitle: '한판승부 하이롤러',
-    avatar: '/assets/images/avatars/avatar_doge.webp',
+    avatar: assetUrl('/assets/images/avatars/avatar_doge.webp'),
     favoriteCategory: 'JEWELRY',
     dialogues: {
       roundStart: [
@@ -79,7 +80,7 @@ export const MASTER_BOTS: Omit<Player, 'cash' | 'chanceCards' | 'hasTakenLoan' |
     isHuman: false,
     persona: 'PICASSO',
     personaTitle: '예술 집착 컬렉터',
-    avatar: '/assets/images/avatars/avatar_picasso.webp',
+    avatar: assetUrl('/assets/images/avatars/avatar_picasso.webp'),
     favoriteCategory: 'PAINTING',
     dialogues: {
       roundStart: [

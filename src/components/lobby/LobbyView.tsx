@@ -5,10 +5,21 @@ import { useCareerStore } from '../../stores/useCareerStore';
 import { useCodexStore } from '../../stores/useCodexStore';
 import { RoomTier, AuctionMode, ItemCategory } from '../../types';
 import { ROOM_TIERS_MASTER, ROOM_TIER_ORDER } from '../../data/roomTiers';
-import { BankruptcyModal } from '../bankruptcy/BankruptcyModal';
-import { RestorationModal } from '../workshop/RestorationModal';
-import { ConsignmentModal } from '../consignment/ConsignmentModal';
+import { AssetImage } from '../common/AssetImage';
+import { ConfirmDialog } from '../common/ConfirmDialog';
+import { assetUrl, assetSrcSet } from '../../services/assetService';
 import { MASTER_ITEMS } from '../../data/masterItems';
+
+// PERF-ASSET-001: 로비 첫 화면에 필요 없는 모달과 confetti 코드를 지연 로딩한다.
+const RestorationModal = React.lazy(() =>
+  import('../workshop/RestorationModal').then((module) => ({ default: module.RestorationModal }))
+);
+const ConsignmentModal = React.lazy(() =>
+  import('../consignment/ConsignmentModal').then((module) => ({ default: module.ConsignmentModal }))
+);
+const BankruptcyModal = React.lazy(() =>
+  import('../bankruptcy/BankruptcyModal').then((module) => ({ default: module.BankruptcyModal }))
+);
 
 export const LobbyView: React.FC = () => {
   const { startNewGame } = useAuctionStore();
@@ -21,6 +32,7 @@ export const LobbyView: React.FC = () => {
   const [isBankruptcyModalOpen, setIsBankruptcyModalOpen] = useState(false);
   const [isRestorationModalOpen, setIsRestorationModalOpen] = useState(false);
   const [isConsignmentModalOpen, setIsConsignmentModalOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const handleEnterRoom = (tier: RoomTier) => {
     if (profile.isBankrupt) {
@@ -49,8 +61,7 @@ export const LobbyView: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative selection:bg-gold-500 selection:text-navy-950"
-      style={{ backgroundImage: `url('/assets/images/backgrounds/bg_lobby.webp')` }}
+      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative selection:bg-gold-500 selection:text-navy-950 bg-lobby-pattern"
     >
       <div className="absolute inset-0 bg-navy-950/85 backdrop-blur-[3px]" />
 
@@ -73,10 +84,11 @@ export const LobbyView: React.FC = () => {
               const percent = info.multiplier >= 1 ? `+${Math.round((info.multiplier - 1) * 100)}%` : `-${Math.round((1 - info.multiplier) * 100)}%`;
 
               return (
-                <div
+                <button
+                  type="button"
                   key={cat}
                   onClick={() => setIsConsignmentModalOpen(true)}
-                  className={`px-3 py-2 rounded-2xl border flex items-center justify-between gap-2 cursor-pointer transition-all duration-150 active:scale-95 ${
+                  className={`px-3 py-2 rounded-2xl border flex items-center justify-between gap-2 cursor-pointer transition-all duration-150 active:scale-95 text-left ${
                     isPump
                       ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300 hover:bg-emerald-950/90'
                       : isDump
@@ -93,12 +105,13 @@ export const LobbyView: React.FC = () => {
                     {isDump && <ArrowDownRight className="w-3 h-3 text-red-400" />}
                     {info.multiplier}x ({percent})
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
 
           <button
+            type="button"
             onClick={() => setIsConsignmentModalOpen(true)}
             className="w-full md:w-auto min-h-[40px] px-4 py-2 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-900 text-xs font-serif font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
           >
@@ -141,7 +154,16 @@ export const LobbyView: React.FC = () => {
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4 text-center md:text-left">
               <div className="relative">
-                <img src="/assets/images/avatars/avatar_user.webp" alt="플레이어 아바타" className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-gold-400 shadow-xl shadow-gold-500/20" />
+                <AssetImage
+                  src={assetUrl('/assets/images/avatars/avatar_user.webp')}
+                  srcSet={assetSrcSet('/assets/images/avatars/avatar_user.webp', 128, '-64', 64)}
+                  sizes="80px"
+                  width={128}
+                  height={128}
+                  loading="eager"
+                  alt="플레이어 아바타"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-gold-400 shadow-xl shadow-gold-500/20"
+                />
                 <span className="absolute -bottom-2 -right-2 px-2.5 py-0.5 rounded-full bg-gold-500 text-navy-950 text-[10px] font-black uppercase shadow-md font-mono">
                   {ROOM_TIERS_MASTER[profile.highestRoomTierUnlocked].badge} {profile.highestRoomTierUnlocked}
                 </span>
@@ -183,8 +205,8 @@ export const LobbyView: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-navy-900 border border-slate-800 w-full sm:w-auto">
-            <button onClick={() => setSelectedMode('ENGLISH')} className={`flex-1 sm:flex-none min-h-[48px] px-5 py-2.5 rounded-xl text-xs font-serif font-bold transition-all duration-150 active:scale-95 cursor-pointer ${selectedMode === 'ENGLISH' ? 'bg-gold-500 text-navy-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}>🏛️ 잉글리시</button>
-            <button onClick={() => setSelectedMode('DUTCH')} className={`flex-1 sm:flex-none min-h-[48px] px-5 py-2.5 rounded-xl text-xs font-serif font-bold transition-all duration-150 active:scale-95 cursor-pointer ${selectedMode === 'DUTCH' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}>📉 더치</button>
+            <button onClick={() => setSelectedMode('ENGLISH')} type="button" aria-pressed={selectedMode === 'ENGLISH'} className={`flex-1 sm:flex-none min-h-[48px] px-5 py-2.5 rounded-xl text-xs font-serif font-bold transition-all duration-150 active:scale-95 cursor-pointer ${selectedMode === 'ENGLISH' ? 'bg-gold-500 text-navy-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}>🏛️ 잉글리시</button>
+            <button onClick={() => setSelectedMode('DUTCH')} type="button" aria-pressed={selectedMode === 'DUTCH'} className={`flex-1 sm:flex-none min-h-[48px] px-5 py-2.5 rounded-xl text-xs font-serif font-bold transition-all duration-150 active:scale-95 cursor-pointer ${selectedMode === 'DUTCH' ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}>📉 더치</button>
           </div>
         </div>
 
@@ -197,7 +219,7 @@ export const LobbyView: React.FC = () => {
               <span className="font-mono text-xs font-bold px-3 py-1.5 rounded-xl bg-purple-950/80 border border-purple-500/50 text-purple-300">
                 🎟️ 블랙 VIP 티켓: <strong className="text-purple-200 font-black">{profile.blackVipTicketCount || 0}</strong>장
               </span>
-              {entryError && <div className="px-3.5 py-1.5 rounded-xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs font-serif flex items-center gap-2 animate-bounce-short"><ShieldAlert className="w-4 h-4 text-red-400" /><span>{entryError}</span></div>}
+              {entryError && <div role="alert" className="px-3.5 py-1.5 rounded-xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs font-serif flex items-center gap-2 animate-bounce-short"><ShieldAlert className="w-4 h-4 text-red-400" /><span>{entryError}</span></div>}
             </div>
           </div>
 
@@ -214,8 +236,7 @@ export const LobbyView: React.FC = () => {
               return (
                 <div
                   key={tier}
-                  onClick={() => { setSelectedTier(tier); setEntryError(null); }}
-                  className={`relative rounded-3xl p-5 border-2 backdrop-blur-md transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 shadow-xl ${
+                  className={`relative rounded-3xl p-5 border-2 backdrop-blur-md transition-all duration-200 flex flex-col justify-between space-y-4 shadow-xl ${
                     isSelected
                       ? isBlackMarket
                         ? 'bg-purple-950/95 border-purple-400 shadow-2xl shadow-purple-500/30 scale-[1.02]'
@@ -224,53 +245,63 @@ export const LobbyView: React.FC = () => {
                       ? isBlackMarket
                         ? 'bg-purple-950/40 border-purple-500/40 hover:border-purple-400'
                         : 'bg-navy-950/70 border-slate-800/80 hover:border-gold-500/40'
-                      : 'bg-navy-950/40 border-slate-900 opacity-60'
+                      : 'bg-navy-950/40 border-slate-900'
                   }`}
                 >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-2xl">{conf.badge}</span>
-                      <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-700 text-slate-300">
-                        입장료: ${conf.entryFee.toLocaleString()}
-                      </span>
-                    </div>
-                    <h3 className="font-serif text-lg font-bold text-slate-100 flex items-center gap-2">
-                      <span>{conf.name}</span>
-                      {!isUnlocked && <Lock className="w-4 h-4 text-slate-500" />}
-                    </h3>
-                    <p className={`text-xs font-medium mt-0.5 ${isBlackMarket ? 'text-purple-400' : 'text-gold-400/90'}`}>
-                      {conf.subtitle}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed font-sans">
-                      {conf.description}
-                    </p>
-                  </div>
-                  <div className="space-y-2 pt-3 border-t border-slate-800/80">
-                    <div className="flex justify-between items-center text-xs font-mono">
-                      <span className="text-slate-400">최소 순자산</span>
-                      <span className={`font-bold ${isUnlocked ? 'text-emerald-400' : 'text-red-400'}`}>
-                        ${conf.minNetWorthRequired.toLocaleString()}
-                      </span>
-                    </div>
-                    {isBlackMarket && (
-                      <div className="flex justify-between items-center text-[11px] font-mono text-purple-300">
-                        <span>또는 VIP 티켓</span>
-                        <span className="font-bold">1장 소모</span>
+                  <div className="flex flex-col justify-between gap-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-2xl">{conf.badge}</span>
+                        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-700 text-slate-300">
+                          입장료: ${conf.entryFee.toLocaleString()}
+                        </span>
                       </div>
-                    )}
-                    <div className="flex justify-between items-center text-xs font-mono">
-                      <span className="text-slate-400">봇 자금력</span>
-                      <span className="text-gold-300 font-bold">
-                        ${conf.botStartingCashRange[0].toLocaleString()} ~ ${conf.botStartingCashRange[1].toLocaleString()}
-                      </span>
+                      <h3 className="font-serif text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <span>{conf.name}</span>
+                        {!isUnlocked && <Lock className="w-4 h-4 text-slate-400" aria-label="잠김" />}
+                      </h3>
+                      <p className={`text-xs font-medium mt-0.5 ${isBlackMarket ? 'text-purple-400' : 'text-gold-400/90'}`}>
+                        {conf.subtitle}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed font-sans">
+                        {conf.description}
+                      </p>
+                    </div>
+                    <div className="space-y-2 pt-3 border-t border-slate-800/80">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-slate-400">최소 순자산</span>
+                        <span className={`font-bold ${isUnlocked ? 'text-emerald-400' : 'text-red-400'}`}>
+                          ${conf.minNetWorthRequired.toLocaleString()}
+                        </span>
+                      </div>
+                      {isBlackMarket && (
+                        <div className="flex justify-between items-center text-[11px] font-mono text-purple-300">
+                          <span>또는 VIP 티켓</span>
+                          <span className="font-bold">1장 소모</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-slate-400">봇 자금력</span>
+                        <span className="text-gold-300 font-bold">
+                          ${conf.botStartingCashRange[0].toLocaleString()} ~ ${conf.botStartingCashRange[1].toLocaleString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleEnterRoom(tier); }}
+                    type="button"
+                    onClick={() => { setSelectedTier(tier); setEntryError(null); }}
+                    aria-pressed={isSelected}
+                    aria-label={`${conf.name} 선택`}
+                    className="absolute inset-0 z-0 rounded-3xl cursor-pointer focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleEnterRoom(tier)}
                     disabled={!isUnlocked || !canAffordFee || profile.isBankrupt}
-                    className={`w-full min-h-[48px] py-3 px-4 rounded-2xl text-xs font-serif font-bold transition-all duration-150 active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`relative z-10 w-full min-h-[48px] py-3 px-4 rounded-2xl text-xs font-serif font-bold transition-all duration-150 active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${
                       !isUnlocked
-                        ? 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed'
+                        ? 'bg-slate-900 border border-slate-800 text-slate-400 cursor-not-allowed'
                         : !canAffordFee
                         ? 'bg-red-950/80 border border-red-500/50 text-red-300 cursor-not-allowed'
                         : profile.isBankrupt
@@ -299,17 +330,57 @@ export const LobbyView: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <button onClick={() => setIsRestorationModalOpen(true)} className="flex-1 sm:flex-none min-h-[48px] px-5 py-3 rounded-2xl bg-navy-900 border border-amber-500/40 text-amber-300 hover:border-amber-400 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"><Wrench className="w-4 h-4 text-amber-400" /><span>유물 복원 공방</span></button>
-            <button onClick={() => setIsConsignmentModalOpen(true)} className="flex-1 sm:flex-none min-h-[48px] px-5 py-3 rounded-2xl bg-navy-900 border border-emerald-500/40 text-emerald-300 hover:border-emerald-400 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"><Store className="w-4 h-4 text-emerald-400" /><span>위탁 리셀 마켓</span></button>
-            <button onClick={() => openCodexModal('ITEMS')} className="flex-1 sm:flex-none min-h-[48px] px-5 py-3 rounded-2xl bg-navy-900 border border-gold-500/30 text-gold-300 hover:border-gold-400 text-xs font-bold transition-all active:scale-95">도감 &amp; 업적 열기</button>
-            <button onClick={resetCareer} className="min-h-[48px] px-4 py-3 rounded-2xl bg-navy-900 border border-slate-800 text-slate-500 hover:text-red-400 text-xs font-mono transition-all active:scale-95"><RotateCcw className="w-4 h-4" /></button>
+            <button onClick={() => setIsRestorationModalOpen(true)} type="button" className="flex-1 sm:flex-none min-h-[48px] px-5 py-3 rounded-2xl bg-navy-900 border border-amber-500/40 text-amber-300 hover:border-amber-400 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"><Wrench className="w-4 h-4 text-amber-400" /><span>유물 복원 공방</span></button>
+            <button onClick={() => setIsConsignmentModalOpen(true)} type="button" className="flex-1 sm:flex-none min-h-[48px] px-5 py-3 rounded-2xl bg-navy-900 border border-emerald-500/40 text-emerald-300 hover:border-emerald-400 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5"><Store className="w-4 h-4 text-emerald-400" /><span>위탁 리셀 마켓</span></button>
+            <button onClick={() => openCodexModal('ITEMS')} type="button" className="flex-1 sm:flex-none min-h-[48px] px-5 py-3 rounded-2xl bg-navy-900 border border-gold-500/30 text-gold-300 hover:border-gold-400 text-xs font-bold transition-all active:scale-95">도감 &amp; 업적 열기</button>
+            <button
+              onClick={() => setIsResetConfirmOpen(true)}
+              type="button"
+              aria-label="커리어 전체 초기화"
+              title="커리어 전체 초기화"
+              className="min-h-[48px] px-4 py-3 rounded-2xl bg-navy-900 border border-slate-800 text-slate-400 hover:text-red-400 text-xs font-mono transition-all active:scale-95"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
           </div>
         </div>
+
+        <p className="text-center text-[11px] text-slate-400 font-sans">
+          ※ 여러 탭에서 동시에 플레이하는 것은 지원하지 않습니다. 저장 충돌을 막기 위해 한 탭에서만 플레이해 주세요.
+        </p>
       </div>
 
-      <RestorationModal isOpen={isRestorationModalOpen} onClose={() => setIsRestorationModalOpen(false)} />
-      <ConsignmentModal isOpen={isConsignmentModalOpen} onClose={() => setIsConsignmentModalOpen(false)} />
-      <BankruptcyModal isOpen={isBankruptcyModalOpen} onClose={() => setIsBankruptcyModalOpen(false)} />
+      {isResetConfirmOpen && (
+        <ConfirmDialog
+          isOpen={isResetConfirmOpen}
+          tone="danger"
+          title="커리어를 완전히 초기화할까요?"
+          description="보관함, 업적, 보유 현금, 시장 시세가 모두 초기 상태로 돌아갑니다. 이 작업은 되돌릴 수 없습니다."
+          confirmLabel="커리어 초기화"
+          cancelLabel="취소"
+          onConfirm={() => {
+            resetCareer();
+            setIsResetConfirmOpen(false);
+          }}
+          onCancel={() => setIsResetConfirmOpen(false)}
+        />
+      )}
+
+      {isRestorationModalOpen && (
+        <React.Suspense fallback={null}>
+          <RestorationModal isOpen onClose={() => setIsRestorationModalOpen(false)} />
+        </React.Suspense>
+      )}
+      {isConsignmentModalOpen && (
+        <React.Suspense fallback={null}>
+          <ConsignmentModal isOpen onClose={() => setIsConsignmentModalOpen(false)} />
+        </React.Suspense>
+      )}
+      {isBankruptcyModalOpen && (
+        <React.Suspense fallback={null}>
+          <BankruptcyModal isOpen onClose={() => setIsBankruptcyModalOpen(false)} />
+        </React.Suspense>
+      )}
     </div>
   );
 };

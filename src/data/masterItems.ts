@@ -1,3 +1,4 @@
+import { assetUrl } from '../services/assetService';
 import { Item, RoomTier } from '../types';
 
 export const MASTER_ITEMS: Item[] = [
@@ -17,7 +18,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 1200,
     dutchDropRatePerSec: 300,
     description: '황제의 옆모습이 선명히 각인된 1세기 로마 제국의 희귀 청동 주화.',
-    imageUrl: '/assets/images/items/item_br_01.webp',
+    imageUrl: assetUrl('/assets/images/items/item_br_01.webp'),
     appraisalCost: 300,
     historicalLore: '지중해 무역의 번영을 상징하는 고대 화폐 유물입니다.'
   },
@@ -34,7 +35,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 1000,
     dutchDropRatePerSec: 240,
     description: '황동 톱니바퀴와 정교한 태엽 장치가 살아 숨쉬는 19세기 독일제 수제 시계.',
-    imageUrl: '/assets/images/items/item_br_02.webp',
+    imageUrl: assetUrl('/assets/images/items/item_br_02.webp'),
     appraisalCost: 300,
     historicalLore: '흑림(블랙 포레스트) 시계 장인의 섬세한 손길이 돋보입니다.'
   },
@@ -51,7 +52,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 1500,
     dutchDropRatePerSec: 400,
     description: '남프랑스의 찬란한 햇살을 담은 인상파 화풍의 활력 넘치는 유채화.',
-    imageUrl: '/assets/images/items/item_03.webp',
+    imageUrl: assetUrl('/assets/images/items/item_03.webp'),
     appraisalCost: 300,
     historicalLore: '강렬한 붓터치와 따스한 색감이 감상자를 매료시킵니다.'
   },
@@ -68,7 +69,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 1400,
     dutchDropRatePerSec: 360,
     description: '비 온 뒤 몽마르트르 언덕의 고즈넉한 풍경을 맑은 물감으로 포착한 작품.',
-    imageUrl: '/assets/images/items/item_br_04.webp',
+    imageUrl: assetUrl('/assets/images/items/item_br_04.webp'),
     appraisalCost: 300,
     historicalLore: '1920년대 벨 에포크 시대 파리의 낭만이 깃들어 있습니다.'
   },
@@ -85,7 +86,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 800,
     dutchDropRatePerSec: 200,
     description: '포도 덩굴 문양이 정교하게 양각된 귀족 만찬용 은식기 세트.',
-    imageUrl: '/assets/images/items/item_br_05.webp',
+    imageUrl: assetUrl('/assets/images/items/item_br_05.webp'),
     appraisalCost: 300,
     historicalLore: '유럽 귀족들의 연회 문화를 엿볼 수 있는 품격 있는 공예품입니다.'
   },
@@ -102,7 +103,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 1200,
     dutchDropRatePerSec: 320,
     description: '선명한 청록색 천연 터키석을 중심으로 은제 필리그리 세공이 돋보이는 브로치.',
-    imageUrl: '/assets/images/items/item_br_06.webp',
+    imageUrl: assetUrl('/assets/images/items/item_br_06.webp'),
     appraisalCost: 300,
     historicalLore: '행운과 승리를 가져다준다는 오리엔탈 부적 장신구입니다.'
   },
@@ -123,7 +124,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 4500,
     dutchDropRatePerSec: 1200,
     description: '코발트 안료로 생생한 화조도가 그려진 황실 하사품 백자 항아리.',
-    imageUrl: '/assets/images/items/item_07.webp',
+    imageUrl: assetUrl('/assets/images/items/item_07.webp'),
     appraisalCost: 500,
     historicalLore: '당대 최고의 가마에서 번조된 유려한 곡선미의 명품입니다.'
   },
@@ -140,7 +141,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 6000,
     dutchDropRatePerSec: 1600,
     description: '청금석과 순금이 결합되어 신성 문자가 음각된 나일강 유역의 수호 부적.',
-    imageUrl: '/assets/images/items/item_05.webp',
+    imageUrl: assetUrl('/assets/images/items/item_05.webp'),
     appraisalCost: 500,
     historicalLore: '파라오의 영생과 부활을 기원하던 제의용 유물입니다.'
   },
@@ -157,7 +158,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 7500,
     dutchDropRatePerSec: 2000,
     description: '빛과 물결의 변화를 몽환적인 붓터치로 포착한 프랑스 인상주의 거장의 명작.',
-    imageUrl: '/assets/images/items/item_sv_03.webp',
+    imageUrl: assetUrl('/assets/images/items/item_sv_03.webp'),
     appraisalCost: 500,
     historicalLore: '지베르니 정원의 연못을 바라보며 완성한 서정시 같은 회화입니다.'
   },
@@ -174,7 +175,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 6500,
     dutchDropRatePerSec: 1800,
     description: '소용돌이치는 별빛과 감청색 밤하늘이 강렬한 감동을 주는 복원 유화.',
-    imageUrl: '/assets/images/items/item_01.webp',
+    imageUrl: assetUrl('/assets/images/items/item_01.webp'),
     appraisalCost: 500,
     historicalLore: '후기 인상주의 화파의 정열적인 영혼이 깃든 걸작입니다.'
   },
@@ -191,7 +192,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 5200,
     dutchDropRatePerSec: 1400,
     description: '타오르는 진홍빛 루비 주변을 로즈 컷 다이아몬드가 감싸는 영국 왕실 양식 반지.',
-    imageUrl: '/assets/images/items/item_sv_05.webp',
+    imageUrl: assetUrl('/assets/images/items/item_sv_05.webp'),
     appraisalCost: 500,
     historicalLore: '19세기 대영제국 귀족 가문의 약혼 예물로 전해진 보물입니다.'
   },
@@ -208,7 +209,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 6200,
     dutchDropRatePerSec: 1700,
     description: '완벽한 구형과 은은한 핑크빛 광택을 자랑하는 페르시아만 천연 진주 54알 목걸이.',
-    imageUrl: '/assets/images/items/item_sv_06.webp',
+    imageUrl: assetUrl('/assets/images/items/item_sv_06.webp'),
     appraisalCost: 500,
     historicalLore: '동양 무역선이 실어 나른 최고급 해수 진주 장신구입니다.'
   },
@@ -229,7 +230,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 22000,
     dutchDropRatePerSec: 6000,
     description: '순금 상감 문양과 화려한 깃털 장식이 완벽 보존된 왕실 근위대장 투구.',
-    imageUrl: '/assets/images/items/item_gd_01.webp',
+    imageUrl: assetUrl('/assets/images/items/item_gd_01.webp'),
     appraisalCost: 1000,
     historicalLore: '백년전쟁 승전 기념 대관식에서 착용되었던 기사도의 정점입니다.'
   },
@@ -246,7 +247,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 30000,
     dutchDropRatePerSec: 8000,
     description: '순금 11kg과 옵시디언, 청금석 눈동자가 뿜어내는 왕가의 불멸 유산.',
-    imageUrl: '/assets/images/items/item_06.webp',
+    imageUrl: assetUrl('/assets/images/items/item_06.webp'),
     appraisalCost: 1000,
     historicalLore: '고대 이집트 제18왕조 파라오의 영혼을 기리는 국보급 유물입니다.'
   },
@@ -263,7 +264,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 38000,
     dutchDropRatePerSec: 10000,
     description: '피렌체 대공방에서 발견된 신비로운 미소의 윤곽과 정교한 인체 소묘.',
-    imageUrl: '/assets/images/items/item_02.webp',
+    imageUrl: assetUrl('/assets/images/items/item_02.webp'),
     appraisalCost: 1000,
     historicalLore: '다빈치의 스푸마토 기법 탄생 비화를 담은 미술사적 결정체입니다.'
   },
@@ -280,7 +281,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 34000,
     dutchDropRatePerSec: 9000,
     description: '빛과 어둠의 극적인 키아로스쿠로 명암법이 인간 내면을 파고드는 초상화.',
-    imageUrl: '/assets/images/items/item_gd_04.webp',
+    imageUrl: assetUrl('/assets/images/items/item_gd_04.webp'),
     appraisalCost: 1000,
     historicalLore: '네덜란드 황금시대를 대표하는 천재 화가의 노년기 대표작입니다.'
   },
@@ -297,7 +298,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 42000,
     dutchDropRatePerSec: 11000,
     description: '50캐럿 카슈미르 사파이어와 100여 개의 브릴리언트 컷 다이아몬드 관.',
-    imageUrl: '/assets/images/items/item_09.webp',
+    imageUrl: assetUrl('/assets/images/items/item_09.webp'),
     appraisalCost: 1000,
     historicalLore: '세기의 대관식에서 왕비의 머리 위를 수놓았던 궁정 보석입니다.'
   },
@@ -314,7 +315,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 45000,
     dutchDropRatePerSec: 12000,
     description: '거대한 패싯 컷팅 다이아몬드가 황금 봉 상단에 군림하는 절대 권력의 상징.',
-    imageUrl: '/assets/images/items/item_10.webp',
+    imageUrl: assetUrl('/assets/images/items/item_10.webp'),
     appraisalCost: 1000,
     historicalLore: '제국의 번영과 왕권을 과시하기 위해 제작된 초호화 의전 유물입니다.'
   },
@@ -335,7 +336,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 110000,
     dutchDropRatePerSec: 30000,
     description: '십계명이 새겨졌던 조각목 위에 순금이 입혀진 성스러운 신화의 유물.',
-    imageUrl: '/assets/images/items/item_dm_01.webp',
+    imageUrl: assetUrl('/assets/images/items/item_dm_01.webp'),
     appraisalCost: 2000,
     historicalLore: '수천 년 동안 감춰졌던 고대 성소의 기적이 담겨 있습니다.'
   },
@@ -352,7 +353,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 95000,
     dutchDropRatePerSec: 24000,
     description: '메소포타미아 문명의 시원과 하늘에 닿으려던 인류의 야망이 기록된 석판.',
-    imageUrl: '/assets/images/items/item_dm_02.webp',
+    imageUrl: assetUrl('/assets/images/items/item_dm_02.webp'),
     appraisalCost: 2000,
     historicalLore: '설형문자 해독을 통해 고대 지구라트의 건축 비밀을 밝혀낸 유물입니다.'
   },
@@ -369,7 +370,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 150000,
     dutchDropRatePerSec: 40000,
     description: '밀라노 수도원 벽화 이전, 레오나르도가 캔버스에 직접 완성한 불후의 원화.',
-    imageUrl: '/assets/images/items/item_dm_03.webp',
+    imageUrl: assetUrl('/assets/images/items/item_dm_03.webp'),
     appraisalCost: 2000,
     historicalLore: '사도들의 극적인 심리 묘사가 온전한 색채로 보존된 인류의 유산입니다.'
   },
@@ -386,7 +387,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 135000,
     dutchDropRatePerSec: 36000,
     description: '신의 손끝과 아담의 손끝이 맞닿는 우주적 순간을 담은 바티칸 보물.',
-    imageUrl: '/assets/images/items/item_dm_04.webp',
+    imageUrl: assetUrl('/assets/images/items/item_dm_04.webp'),
     appraisalCost: 2000,
     historicalLore: '시스티나 성당 천장화의 원형 구도를 증명하는 유일무이한 유채화입니다.'
   },
@@ -403,7 +404,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 170000,
     dutchDropRatePerSec: 44000,
     description: '짙은 딥블루 광채 속에 자외선을 받으면 붉게 인광하는 45캐럿 전설의 보석.',
-    imageUrl: '/assets/images/items/item_dm_05.webp',
+    imageUrl: assetUrl('/assets/images/items/item_dm_05.webp'),
     appraisalCost: 2000,
     historicalLore: '왕과 황제들의 손을 거치며 매혹과 경외를 동시에 자아낸 보석입니다.'
   },
@@ -420,7 +421,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 190000,
     dutchDropRatePerSec: 50000,
     description: '지혜와 신비의 힘을 봉인했다는 육각별 문양의 초대형 천연 스타 루비 반지.',
-    imageUrl: '/assets/images/items/item_dm_06.webp',
+    imageUrl: assetUrl('/assets/images/items/item_dm_06.webp'),
     appraisalCost: 2000,
     historicalLore: '고대 왕국의 권위와 영광을 상징하는 전설적인 옥스포드 보물입니다.'
   },
@@ -441,7 +442,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 60000,
     dutchDropRatePerSec: 25000,
     description: '파라오의 무덤에서 불법 도굴된 철제 단검. 소유자에게 파멸을 부른다는 저주가 서려 있습니다.',
-    imageUrl: '/assets/images/items/item_bm_01.webp',
+    imageUrl: assetUrl('/assets/images/items/item_bm_01.webp'),
     appraisalCost: 3000,
     restorationCost: 15000,
     isContraband: true,
@@ -462,7 +463,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 80000,
     dutchDropRatePerSec: 30000,
     description: '인신공양 의식에 쓰였던 터키석 모자이크 해골 가면. 섬뜩한 광채를 뿜어냅니다.',
-    imageUrl: '/assets/images/items/item_bm_02.webp',
+    imageUrl: assetUrl('/assets/images/items/item_bm_02.webp'),
     appraisalCost: 3000,
     restorationCost: 18000,
     isContraband: true,
@@ -483,7 +484,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 100000,
     dutchDropRatePerSec: 40000,
     description: '국제 인터폴 수배 1호 명화. 르네상스 거장의 유려한 붓터치가 그대로 남아 있습니다.',
-    imageUrl: '/assets/images/items/item_bm_03.webp',
+    imageUrl: assetUrl('/assets/images/items/item_bm_03.webp'),
     appraisalCost: 4000,
     restorationCost: 20000,
     isContraband: true,
@@ -504,7 +505,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 90000,
     dutchDropRatePerSec: 35000,
     description: '2차 대전 당시 약탈된 예술품들을 감싸고 있던 순금 조각 액자와 미공개 인물화.',
-    imageUrl: '/assets/images/items/item_bm_04.webp',
+    imageUrl: assetUrl('/assets/images/items/item_bm_04.webp'),
     appraisalCost: 3500,
     restorationCost: 18000,
     isContraband: true,
@@ -525,7 +526,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 150000,
     dutchDropRatePerSec: 50000,
     description: '핏빛 붉은 섬광을 뿜어내는 80캐럿 블랙 다이아몬드. 소유자들을 비극으로 이끌었습니다.',
-    imageUrl: '/assets/images/items/item_bm_05.webp',
+    imageUrl: assetUrl('/assets/images/items/item_bm_05.webp'),
     appraisalCost: 5000,
     restorationCost: 25000,
     isContraband: true,
@@ -546,7 +547,7 @@ export const MASTER_ITEMS: Item[] = [
     dutchFloorPrice: 100000,
     dutchDropRatePerSec: 38000,
     description: '보석 뚜껑을 열면 치명적인 청산염을 주입할 수 있는 16세기 베네치아 암살자의 금반지.',
-    imageUrl: '/assets/images/items/item_bm_06.webp',
+    imageUrl: assetUrl('/assets/images/items/item_bm_06.webp'),
     appraisalCost: 4000,
     restorationCost: 20000,
     isContraband: true,

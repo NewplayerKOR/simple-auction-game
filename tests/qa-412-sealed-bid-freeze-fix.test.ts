@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuctionStore } from '../src/stores/useAuctionStore';
-import { MASTER_ITEMS } from '../src/data/masterItems';
 import { useCareerStore } from '../src/stores/useCareerStore';
 
 const localStorageMock = (() => {

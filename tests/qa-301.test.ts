@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuctionStore } from '../src/stores/useAuctionStore';
-import { LOAN_CONFIG, APPRAISAL_CONFIG, TIMER_CONFIG } from '../src/data/constants';
-import { ROOM_TIERS_MASTER } from '../src/data/roomTiers';
+import { LOAN_CONFIG, TIMER_CONFIG } from '../src/data/constants';
 import { MASTER_ITEMS } from '../src/data/masterItems';
 import { MASTER_SYNERGIES } from '../src/data/masterSynergies';
 import { useCareerStore } from '../src/stores/useCareerStore';
@@ -127,8 +126,6 @@ describe('QA-301: TC-01 ~ TC-10 기본 인수 조건 검증', () => {
     store.startNewGame('BRONZE');
     store.startBidding();
 
-    const user = useAuctionStore.getState().players.find(p => p.isHuman)!;
-    
     // 수동으로 3종 카드 모두 부여하여 테스트
     const cards = [
       { id: 'card-1', type: 'MAGNIFIER' as const, name: '정밀 감정 돋보기', description: '', icon: '🔍', isUsed: false },
@@ -220,7 +217,7 @@ describe('QA-301: TC-01 ~ TC-10 기본 인수 조건 검증', () => {
   });
 
   // TC-08: 위작(Fake) 판정 & 감정사
-  it('TC-08: 감정사($500) 의뢰 시 힌트 브리핑 및 위작 낙찰 시 실제 가치 $0 처리 검증', () => {
+  it('TC-08: 아이템별 감정 비용 의뢰 시 힌트 브리핑 및 위작 낙찰 시 실제 가치 $0 처리 검증', () => {
     const store = useAuctionStore.getState();
     store.startNewGame('BRONZE');
     
@@ -236,7 +233,7 @@ describe('QA-301: TC-01 ~ TC-10 기본 인수 조건 검증', () => {
 
     let state = useAuctionStore.getState();
     const userAfterAppraisal = state.players.find(p => p.isHuman)!;
-    expect(userAfterAppraisal.cash).toBe(userInitialCash - APPRAISAL_CONFIG.COST); // $500 차감
+    expect(userAfterAppraisal.cash).toBe(userInitialCash - fakeItem.appraisalCost); // 아이템별 appraisalCost 차감
     expect(state.appraisalBriefing?.verdict).toBe('FORGERY');
     expect(state.isAppraisalModalOpen).toBe(true);
     expect(state.currentItem?.isAppraised).toBe(true);

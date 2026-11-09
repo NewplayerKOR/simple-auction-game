@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useCareerStore, evaluateRoomGating } from '../src/stores/useCareerStore';
-import { ROOM_TIERS_MASTER } from '../src/data/roomTiers';
-import { RoomTier } from '../src/types';
 import { MASTER_ITEMS } from '../src/data/masterItems';
 
 // Mock localStorage for Node test runner

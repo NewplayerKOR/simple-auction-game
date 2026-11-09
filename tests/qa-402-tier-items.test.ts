@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MASTER_ITEMS, createTierItemQueue } from '../src/data/masterItems';
-import { ROOM_TIERS_MASTER, ROOM_TIER_ORDER } from '../src/data/roomTiers';
-import { RoomTier } from '../src/types';
+import { ROOM_TIER_ORDER } from '../src/data/roomTiers';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 

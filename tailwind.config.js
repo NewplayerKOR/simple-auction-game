@@ -18,6 +18,7 @@ export default {
           700: '#94721D',
           800: '#735718',
           900: '#5A4315',
+          950: '#3B2A0B',
         },
         navy: {
           800: '#141E33',
@@ -30,8 +31,8 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['Cinzel', 'Playfair Display', 'Georgia', 'serif'],
-        sans: ['Pretendard', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Cinzel', 'Georgia', 'Times New Roman', 'serif'],
+        sans: ['system-ui', '-apple-system', 'Apple SD Gothic Neo', 'Malgun Gothic', 'sans-serif'],
       },
       animation: {
         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',

@@ -1,0 +1,79 @@
+name: QA
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 26
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Verify toolchain
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck tests and source
+        run: npm run typecheck
+
+      - name: Asset budget and integrity
+        run: npm run check:assets
+
+      - name: Unit and integration tests with coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Build for subpath deployment
+        run: npm run build:subpath
+
+      - name: Restore root build artifact
+        run: npm run build
+
+      - name: Security audit (all dependencies)
+        run: npm audit --audit-level=high
+
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser E2E
+        run: npm run test:e2e
+
+      - name: Upload QA and build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-artifacts
+          path: |
+            coverage/
+            playwright-report/
+            test-results/
+            dist/
+          if-no-files-found: ignore
+          retention-days: 7

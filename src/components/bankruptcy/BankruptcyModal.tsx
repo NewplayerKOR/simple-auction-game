@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertOctagon, RotateCcw, ShieldAlert, Sparkles, TrendingDown } from 'lucide-react';
 import { useCareerStore } from '../../stores/useCareerStore';
 import { BANKRUPTCY_CONFIG } from '../../data/constants';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 interface BankruptcyModalProps {
   isOpen?: boolean;
@@ -10,8 +11,12 @@ interface BankruptcyModalProps {
 
 export const BankruptcyModal: React.FC<BankruptcyModalProps> = ({ isOpen, onClose }) => {
   const { profile, declareBankruptcy } = useCareerStore();
-
   const isModalVisible = isOpen || profile.isBankrupt;
+  const dialogRef = useModalA11y<HTMLDivElement>(isModalVisible, onClose ?? (() => {}), {
+    closeOnEscape: Boolean(onClose),
+    initialFocusSelector: '[data-bankruptcy-dialog]',
+  });
+
   if (!isModalVisible) return null;
 
   const handleDeclareBankruptcy = () => {
@@ -21,7 +26,13 @@ export const BankruptcyModal: React.FC<BankruptcyModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-lg animate-fade-in">
-      <div 
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bankruptcy-modal-title"
+        tabIndex={-1}
+        data-bankruptcy-dialog
         className="w-full max-w-lg rounded-3xl bg-navy-950/90 backdrop-blur-xl border border-red-500/40 shadow-2xl shadow-red-500/20 overflow-hidden flex flex-col p-6 sm:p-8 space-y-6"
         onClick={(e) => e.stopPropagation()}
       >
@@ -35,7 +46,7 @@ export const BankruptcyModal: React.FC<BankruptcyModalProps> = ({ isOpen, onClos
               <ShieldAlert className="w-3.5 h-3.5" />
               FINANCIAL COLLAPSE
             </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-black text-slate-100 tracking-wide">
+            <h2 id="bankruptcy-modal-title" className="font-serif text-2xl sm:text-3xl font-black text-slate-100 tracking-wide">
               파산 선고: 자금 고갈
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-sm leading-relaxed font-sans">
@@ -87,6 +98,7 @@ export const BankruptcyModal: React.FC<BankruptcyModalProps> = ({ isOpen, onClos
 
         {/* Action Button (Apple HIG 48px tactile active:scale-95) */}
         <button
+          type="button"
           onClick={handleDeclareBankruptcy}
           className="w-full min-h-[48px] py-3.5 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-gold-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-red-500/25 flex items-center justify-center gap-2.5 transition-all duration-150 ease-out active:scale-95 hover:brightness-110 hover:shadow-red-500/40 cursor-pointer"
         >

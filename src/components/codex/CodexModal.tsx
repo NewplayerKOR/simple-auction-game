@@ -4,6 +4,10 @@ import { useCodexStore } from '../../stores/useCodexStore';
 import { useCareerStore } from '../../stores/useCareerStore';
 import { RoomTier } from '../../types';
 import { ROOM_TIERS_MASTER } from '../../data/roomTiers';
+import { AssetImage } from '../common/AssetImage';
+import { assetSrcSet } from '../../services/assetService';
+import { ConfirmDialog } from '../common/ConfirmDialog';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 export const CodexModal: React.FC = () => {
   const {
@@ -18,6 +22,11 @@ export const CodexModal: React.FC = () => {
 
   const { profile } = useCareerStore();
   const [selectedTierFilter, setSelectedTierFilter] = useState<RoomTier | 'ALL'>('ALL');
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const dialogRef = useModalA11y<HTMLDivElement>(
+    isCodexModalOpen && !isResetConfirmOpen,
+    closeCodexModal
+  );
 
   if (!isCodexModalOpen) return null;
 
@@ -31,45 +40,55 @@ export const CodexModal: React.FC = () => {
     : hydratedItems.filter((i) => i.item.tier === selectedTierFilter);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div 
-        className="bg-navy-900 border border-gold-500/40 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl shadow-gold-500/10 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex items-start justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gold-500/20 bg-navy-950/80">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="shrink-0 p-2 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400">
-              {activeTab === 'ITEMS' ? <BookOpen className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="codex-modal-title"
+          aria-hidden={isResetConfirmOpen || undefined}
+          tabIndex={-1}
+          className="bg-navy-900 border border-gold-500/40 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl shadow-gold-500/10 overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Modal Header */}
+          <div className="flex items-start justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gold-500/20 bg-navy-950/80">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="shrink-0 p-2 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400">
+                {activeTab === 'ITEMS' ? <BookOpen className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
+              </div>
+              <div className="min-w-0">
+                <h2 id="codex-modal-title" className="font-serif text-lg font-bold text-slate-100 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+                  {activeTab === 'ITEMS' ? `소더비 ${hydratedItems.length}종 역사 유물 도감 (Master Codex)` : '영구 업적 및 트로피'}
+                  <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-sans font-medium px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300">
+                    <ShieldCheck className="w-3 h-3" />
+                    Career Storage v2.3.1
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-400 font-sans">
+                  다회차 플레이를 통해 5단계 룸 티어 {hydratedItems.length}종의 보물과 트로피를 수집하세요.
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h2 className="font-serif text-lg font-bold text-slate-100 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-                {activeTab === 'ITEMS' ? `소더비 ${hydratedItems.length}종 역사 유물 도감 (Master Codex)` : '영구 업적 및 트로피'}
-                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-sans font-medium px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300">
-                  <ShieldCheck className="w-3 h-3" />
-                  Career Storage v2.3.1
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400 font-sans">
-                다회차 플레이를 통해 5단계 룸 티어 {hydratedItems.length}종의 보물과 트로피를 수집하세요.
-              </p>
-            </div>
-          </div>
 
-          <button
-            onClick={closeCodexModal}
-            aria-label="도감 닫기"
-            className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-navy-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={closeCodexModal}
+              aria-label="도감 닫기"
+              className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-navy-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
         {/* Tab Navigation & Stats Strip */}
         <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3 bg-navy-950/40 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setActiveTab('ITEMS')}
+              aria-pressed={activeTab === 'ITEMS'}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'ITEMS'
                   ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 shadow-md font-bold'
@@ -80,7 +99,9 @@ export const CodexModal: React.FC = () => {
               유물 도감 ({unlockedItemCount}/{hydratedItems.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('ACHIEVEMENTS')}
+              aria-pressed={activeTab === 'ACHIEVEMENTS'}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'ACHIEVEMENTS'
                   ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 shadow-md font-bold'
@@ -88,7 +109,7 @@ export const CodexModal: React.FC = () => {
               }`}
             >
               <Trophy className="w-3.5 h-3.5" />
-              달성 업적 ({unlockedAchCount}/8)
+              달성 업적 ({unlockedAchCount}/{hydratedAchievements.length})
             </button>
           </div>
 
@@ -121,8 +142,10 @@ export const CodexModal: React.FC = () => {
 
               return (
                 <button
+                  type="button"
                   key={tierKey}
                   onClick={() => setSelectedTierFilter(tierKey)}
+                  aria-pressed={isSelected}
                   className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
                     isSelected
                       ? 'bg-gold-500/20 border border-gold-400 text-gold-300 shadow-sm'
@@ -137,7 +160,12 @@ export const CodexModal: React.FC = () => {
         )}
 
         {/* Modal Body Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div
+          className="flex-1 overflow-y-auto p-6 space-y-4"
+          role="region"
+          aria-label="도감 내용"
+          tabIndex={0}
+        >
           {activeTab === 'ITEMS' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredItems.map(({ item, isUnlocked }) => (
@@ -146,15 +174,19 @@ export const CodexModal: React.FC = () => {
                   className={`relative rounded-xl border p-3 flex flex-col transition-all duration-300 ${
                     isUnlocked
                       ? 'bg-navy-950/90 border-gold-500/40 shadow-lg hover:border-gold-400'
-                      : 'bg-navy-950/40 border-slate-800/80 opacity-60'
+                      : 'bg-navy-950/40 border-slate-800/80'
                   }`}
                 >
                   {/* Item Image Container */}
                   <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-slate-900 border border-slate-800 mb-3 group">
                     {isUnlocked ? (
                       <>
-                        <img
+                        <AssetImage
                           src={item.imageUrl}
+                          srcSet={assetSrcSet(item.imageUrl, 512, '-256', 256)}
+                          sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
+                          width={512}
+                          height={512}
                           alt={item.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
@@ -163,7 +195,7 @@ export const CodexModal: React.FC = () => {
                         </div>
                       </>
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-600">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                         <Lock className="w-8 h-8 mb-2" />
                         <span className="text-[11px] font-mono tracking-wider">미해금 유물</span>
                       </div>
@@ -178,7 +210,7 @@ export const CodexModal: React.FC = () => {
                   {/* Item Info */}
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className={`font-serif text-sm font-bold truncate ${isUnlocked ? 'text-gold-200' : 'text-slate-500'}`}>
+                      <h3 className={`font-serif text-sm font-bold truncate ${isUnlocked ? 'text-gold-200' : 'text-slate-300'}`}>
                         {isUnlocked ? item.name : '미지의 출품작'}
                       </h3>
                       <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
@@ -206,15 +238,19 @@ export const CodexModal: React.FC = () => {
                   className={`p-4 rounded-xl border flex items-start gap-4 transition-all ${
                     isUnlocked
                       ? 'bg-navy-950/90 border-gold-500/50 shadow-md'
-                      : 'bg-navy-950/40 border-slate-800 opacity-60'
+                      : 'bg-navy-950/40 border-slate-800'
                   }`}
                 >
                   <div className={`p-2 rounded-2xl border flex-shrink-0 transition-all ${
                     isUnlocked ? 'bg-gold-500/10 border-gold-500/40 shadow-md shadow-gold-500/20' : 'bg-slate-900 border-slate-800'
                   }`}>
                     {achievement.badgeImageUrl ? (
-                      <img
+                      <AssetImage
                         src={achievement.badgeImageUrl}
+                        srcSet={assetSrcSet(achievement.badgeImageUrl, 256, '-128', 128)}
+                        sizes="56px"
+                        width={256}
+                        height={256}
                         alt={achievement.title}
                         className={`w-14 h-14 rounded-xl object-contain transition-all ${
                           isUnlocked ? 'scale-105' : 'grayscale opacity-35'
@@ -228,7 +264,7 @@ export const CodexModal: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className={`font-serif text-sm font-bold ${isUnlocked ? 'text-gold-300' : 'text-slate-400'}`}>
+                      <h3 className={`font-serif text-sm font-bold ${isUnlocked ? 'text-gold-300' : 'text-slate-300'}`}>
                         {achievement.title}
                       </h3>
                       {isUnlocked ? (
@@ -236,7 +272,7 @@ export const CodexModal: React.FC = () => {
                           <Sparkles className="w-3 h-3" /> 달성 완료
                         </span>
                       ) : (
-                        <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
+                        <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
                           <Lock className="w-3 h-3" /> 미달성
                         </span>
                       )}
@@ -253,18 +289,36 @@ export const CodexModal: React.FC = () => {
 
         {/* Modal Footer */}
         <div className="px-6 py-3 bg-navy-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-          <div className="flex items-center gap-1 text-slate-500 text-[11px]">
+          <div className="flex items-center gap-1 text-slate-400 text-[11px]">
             <span>💡 {hydratedItems.length}종 고유 유물과 업적이 영구 보존됩니다.</span>
           </div>
           <button
-            onClick={resetAllData}
-            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-red-400 transition-colors"
-            title="스토리지 초기화 (테스트용)"
+            type="button"
+            onClick={() => setIsResetConfirmOpen(true)}
+            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-red-400 transition-colors"
           >
             <RefreshCw className="w-3 h-3" /> 도감 초기화
           </button>
         </div>
       </div>
-    </div>
+      </div>
+
+      {isResetConfirmOpen && (
+        <ConfirmDialog
+          isOpen={isResetConfirmOpen}
+          tone="danger"
+          title="도감과 커리어를 초기화할까요?"
+          description="보관함, 업적, 커리어 현금, 시장 시세가 모두 초기 상태로 돌아갑니다. 이 작업은 되돌릴 수 없습니다."
+          confirmLabel="모두 초기화"
+          cancelLabel="취소"
+          onConfirm={() => {
+            resetAllData();
+            setIsResetConfirmOpen(false);
+            closeCodexModal();
+          }}
+          onCancel={() => setIsResetConfirmOpen(false)}
+        />
+      )}
+    </>
   );
 };

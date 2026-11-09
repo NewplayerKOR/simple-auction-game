@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect, beforeEach } from 'vitest';
-import { useCareerStore, checkIsBankrupt, INITIAL_CAREER_PROFILE } from '../src/stores/useCareerStore';
+import { useCareerStore, checkIsBankrupt } from '../src/stores/useCareerStore';
 import { BANKRUPTCY_CONFIG } from '../src/data/constants';
 import { Item } from '../src/types';
 
@@ -43,6 +43,7 @@ describe('QA-404: DEV-308 Strict Economy, Loss Erosion & Bankruptcy Rollback', (
     // Player lost money during the game (e.g. -19,000 resulting in  cash, and acquired 1 fake item )
     const fakeItem: Item = {
       id: 'fake_01',
+      tier: 'BRONZE',
       name: '위작 골동품',
       category: 'ANTIQUE',
       estimatedMin: 5000,
@@ -53,6 +54,8 @@ describe('QA-404: DEV-308 Strict Economy, Loss Erosion & Bankruptcy Rollback', (
       isAppraised: true,
       dutchStartPrice: 10000,
       dutchFloorPrice: 2000,
+      dutchDropRatePerSec: 100,
+      appraisalCost: 500,
       imageUrl: '/assets/images/items/bronze/item_pottery.webp',
       description: '가짜 유물'
     };

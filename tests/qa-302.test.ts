@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuctionStore } from '../src/stores/useAuctionStore';
-import { MASTER_ITEMS } from '../src/data/masterItems';
 import { TIMER_CONFIG } from '../src/data/constants';
 
 // Mock localStorage
@@ -99,10 +98,6 @@ describe('QA-302: 4R 비밀 봉투 경매 단판 승부 및 동점자 처리 검
     useAuctionStore.setState({ currentRound: 4 });
     store.startRoundIntro();
     store.startBidding();
-
-    // 동점 시나리오: 유저와 봇이 동일한 최고 금액을 제시한 상황 시뮬레이션
-    const item = useAuctionStore.getState().currentItem!;
-    const user = useAuctionStore.getState().players.find(p => p.isHuman)!;
 
     // submitSealedBid 로직 직접 점검
     store.submitSealedBid(4000);

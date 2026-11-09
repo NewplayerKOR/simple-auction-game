@@ -2,12 +2,28 @@
   "name": "simple-auction-game",
   "private": true,
   "version": "2.3.1",
+  "license": "UNLICENSED",
   "type": "module",
+  "packageManager": "npm@11.20.0",
+  "engines": {
+    "node": ">=26.0.0",
+    "npm": ">=11.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:subpath": "cross-env VITE_BASE_PATH=/simple-auction-game/ npm run build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "test": "cross-env NODE_OPTIONS=--no-experimental-webstorage vitest run",
+    "test:watch": "cross-env NODE_OPTIONS=--no-experimental-webstorage vitest",
+    "test:coverage": "cross-env NODE_OPTIONS=--no-experimental-webstorage vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "check:assets": "node scripts/check-asset-budget.mjs",
+    "optimize:assets": "node scripts/optimize-assets.mjs",
+    "perf:transfer": "node scripts/measure-transfer.mjs",
+    "verify:deploy": "node scripts/verify-deployment.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -19,16 +35,26 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^22.10.2",
+    "@types/node": "^26.6.6",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^4.1.12",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
+    "jsdom": "^27.0.1",
     "postcss": "^8.4.49",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.6.2",
-    "vite": "^6.0.7",
-    "vitest": "^4.1.11"
+    "vite": "^6.4.5",
+    "vitest": "^4.1.12"
   }
 }

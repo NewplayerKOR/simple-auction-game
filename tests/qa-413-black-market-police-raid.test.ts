@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useCareerStore } from '../src/stores/useCareerStore';
 import { useAuctionStore } from '../src/stores/useAuctionStore';
 import { MASTER_ITEMS } from '../src/data/masterItems';
-import { ROOM_TIERS_MASTER } from '../src/data/roomTiers';
-import { BLACK_MARKET_CONFIG } from '../src/data/constants';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};

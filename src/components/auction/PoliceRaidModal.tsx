@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
 import { ShieldAlert, DollarSign, Footprints, AlertTriangle, Siren } from 'lucide-react';
 import { useAuctionStore } from '../../stores/useAuctionStore';
+import { AssetImage } from '../common/AssetImage';
+import { assetSrcSet } from '../../services/assetService';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 export const PoliceRaidModal: React.FC = () => {
   const {
@@ -12,6 +15,10 @@ export const PoliceRaidModal: React.FC = () => {
     players,
     currentItem,
   } = useAuctionStore();
+  const dialogRef = useModalA11y<HTMLDivElement>(isPoliceRaidModalOpen && policeRaidState.isActive, () => {}, {
+    closeOnEscape: false,
+    initialFocusSelector: '[data-raid-escape]',
+  });
 
   const user = players.find((p) => p.isHuman);
   const canAffordBribe = (user?.cash || 0) >= policeRaidState.totalCost;
@@ -34,11 +41,18 @@ export const PoliceRaidModal: React.FC = () => {
       {/* 붉은색/푸른색 경찰 경광등 배경 애니메이션 */}
       <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-transparent to-blue-600/20 animate-pulse pointer-events-none" />
 
-      <div className="relative w-full max-w-lg bg-zinc-900/95 border-2 border-red-500/80 rounded-2xl p-6 shadow-2xl text-center backdrop-blur-xl overflow-hidden">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="police-raid-modal-title"
+        tabIndex={-1}
+        className="relative w-full max-w-lg bg-zinc-900/95 border-2 border-red-500/80 rounded-2xl p-6 shadow-2xl text-center backdrop-blur-xl overflow-hidden"
+      >
         {/* 상단 사이렌 & 경고 헤더 */}
         <div className="flex items-center justify-center gap-3 mb-3">
           <Siren className="w-8 h-8 text-red-500 animate-bounce" />
-          <h2 className="text-2xl font-black tracking-wider text-red-400 font-display">
+          <h2 id="police-raid-modal-title" className="text-2xl font-black tracking-wider text-red-400 font-display">
             🚨 경찰 긴급 급습! (POLICE RAID)
           </h2>
           <Siren className="w-8 h-8 text-blue-500 animate-bounce" />
@@ -53,8 +67,8 @@ export const PoliceRaidModal: React.FC = () => {
         <div className="mb-5 bg-zinc-800/80 rounded-xl p-3 border border-red-500/30">
           <div className="flex justify-between items-center text-xs text-zinc-400 mb-1">
             <span>체포까지 남은 시간</span>
-            <span className="font-mono font-black text-red-400 text-lg">
-              0{policeRaidState.timeLeft}s
+            <span role="timer" aria-live="assertive" aria-atomic="true" aria-label={`체포까지 ${policeRaidState.timeLeft}초`} className="font-mono font-black text-red-400 text-lg">
+              {policeRaidState.timeLeft}s
             </span>
           </div>
           <div className="w-full bg-zinc-700 h-2.5 rounded-full overflow-hidden">
@@ -68,8 +82,12 @@ export const PoliceRaidModal: React.FC = () => {
         {/* 출품 밀수품 정보 */}
         {currentItem && (
           <div className="mb-6 p-3.5 bg-zinc-800/60 rounded-xl border border-zinc-700/60 flex items-center gap-3 text-left">
-            <img
+            <AssetImage
               src={currentItem.imageUrl}
+              srcSet={assetSrcSet(currentItem.imageUrl, 512, '-256', 256)}
+              sizes="56px"
+              width={512}
+              height={512}
               alt={currentItem.name}
               className="w-14 h-14 object-cover rounded-lg border border-red-500/40"
             />
@@ -80,7 +98,9 @@ export const PoliceRaidModal: React.FC = () => {
               </div>
               <div className="text-sm font-bold text-zinc-100 truncate">{currentItem.name}</div>
               <div className="text-xs text-amber-300 font-mono font-semibold">
-                실제 가치: ${currentItem.realValue.toLocaleString()}
+                {currentItem.isAppraised
+                  ? `감정 결과: ${currentItem.isFake ? '위작 판정' : '진품 판정'}`
+                  : `감정 추정: $${currentItem.estimatedMin.toLocaleString()} ~ $${currentItem.estimatedMax.toLocaleString()}`}
               </div>
             </div>
           </div>
@@ -90,6 +110,8 @@ export const PoliceRaidModal: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* 1. 빈손으로 즉시 탈출 */}
           <button
+            type="button"
+            data-raid-escape
             onClick={escapePoliceRaid}
             className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm transition-all duration-200 active:scale-95 border border-zinc-600 shadow-md min-h-[48px]"
           >
@@ -99,6 +121,7 @@ export const PoliceRaidModal: React.FC = () => {
 
           {/* 2. 경찰 서장 뇌물 매수 */}
           <button
+            type="button"
             onClick={bribePoliceRaid}
             disabled={!canAffordBribe}
             className={`flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all duration-200 active:scale-95 shadow-lg min-h-[48px] ${

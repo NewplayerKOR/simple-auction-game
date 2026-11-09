@@ -2,13 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PERF-ASSET-001: Google Fonts 의존을 제거하고 Cinzel 라틴 서브셋만 자체 호스팅한다. */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/cinzel-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
 @layer base {
   body {
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   }
 
   h1, h2, h3, .font-serif-luxury {
-    font-family: 'Cinzel', serif;
+    font-family: 'Cinzel', Georgia, 'Times New Roman', serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid #E2BF62 !important;
+    outline-offset: 2px;
+  }
+}
+
+/* A11Y-001: 모션 감소 설정에서도 필수 정보는 최종 상태로 표시한다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer utilities {
+  /* 모바일은 960×540, 데스크톱은 1280×720 배경을 사용한다. */
+  .bg-lobby-pattern {
+    background-color: #080c17;
+    background-image: url('/assets/images/backgrounds/bg_lobby-960.webp');
+  }
+  .bg-auction-pattern {
+    background-color: #080c17;
+    background-image: url('/assets/images/backgrounds/bg_auction_hall-960.webp');
+  }
+  .bg-gallery-pattern {
+    background-color: #080c17;
+    background-image: url('/assets/images/backgrounds/bg_museum_gallery-960.webp');
+  }
+  @media (min-width: 768px) {
+    .bg-lobby-pattern {
+      background-image: url('/assets/images/backgrounds/bg_lobby.webp');
+    }
+    .bg-auction-pattern {
+      background-image: url('/assets/images/backgrounds/bg_auction_hall.webp');
+    }
+    .bg-gallery-pattern {
+      background-image: url('/assets/images/backgrounds/bg_museum_gallery.webp');
+    }
   }
 }
 

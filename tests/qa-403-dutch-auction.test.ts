@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DutchTickEngine } from '../src/services/dutchTickEngine';
 import { AiBotService } from '../src/services/aiBotService';
-import { useAuctionStore } from '../src/stores/useAuctionStore';
-import { ROOM_TIERS_MASTER } from '../src/data/roomTiers';
 import { MASTER_ITEMS } from '../src/data/masterItems';
 
 

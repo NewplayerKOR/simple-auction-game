@@ -122,7 +122,7 @@
 - 현재 런타임·패키지 버전: `2.3.1`
 - 현재 마일스톤: v2.3.1 `RELEASE_CANDIDATE` — PM 승인 대기
 - 핵심 기술 스택:
-  - Language / Runtime: TypeScript, React 18, Vite, Node.js
+  - Language / Runtime: TypeScript, React 18, Vite, Node.js 26 이상
   - Framework / Library: React, Zustand, Tailwind CSS, Vitest, Web Audio API
   - Database / Infrastructure: 브라우저 LocalStorage, 백엔드 없음
 - 주요 실행/테스트 명령어:

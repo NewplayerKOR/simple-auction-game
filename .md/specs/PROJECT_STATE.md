@@ -1,15 +1,16 @@
 # 프로젝트 현재 상태
 
 > 이 문서는 과거 계획이 아니라 현재 확인된 사실만 기록하는 세션 복구용 문서다.  
-> **기준일:** 2026-11-08  
+> **기준일:** 2026-11-09
 > **활성 문서 체계:** `.md`  
 > **런타임·패키지 버전:** `2.3.1`  
 > **현재 마일스톤:** v2.3.1 `RELEASE_CANDIDATE`  
-> **다음 판단:** PM의 `PM_RELEASE_APPROVED` 여부
+> **다음 판단:** `REL-001` 보류 — 후속 P1 TASK 완료 후 `PM_RELEASE_APPROVED` 재판정
 
 ## 1. 확인된 구현 범위
 
 - React 18, TypeScript, Vite, Zustand 기반 싱글플레이 SPA
+- Node.js 26 이상, npm 11 이상 빌드·테스트 런타임
 - 잉글리시 호가, 4라운드 비밀 봉투, 더치 역경매
 - 브론즈·실버·골드·다이아몬드·암시장 5개 룸
 - 30종 마스터 아이템: 일반 24종과 암시장 밀수품 6종
@@ -29,6 +30,88 @@
 | 에셋 무결성 | 구 `docs/art/asset` 58개와 `public/assets` 58개의 SHA-256 일치 | 파일 무결성만 확인. 로딩 성능·최적화는 미검증 |
 | 문서 이관 | 구 `docs/`의 상태·요구사항·결정·기술 명세를 `.md/`로 이관하고 `docs/` 삭제 | 문서 작업. 제품 코드·테스트 변경 없음 |
 
+### 2026-11-09 / QA_DEVOPS 분석 기록
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `npm.cmd test`·`npm.cmd run build` | 17개 파일 84개 테스트 통과, 빌드 통과 | QA_DEVOPS 분석 기록. PM 재실행 아님 |
+| 테스트 포함 타입 검사 | 12개 오류 (`qa-306`, `qa-404`, `qa-410` 등) | 현재 `tsconfig`는 테스트를 제외하므로 별도 기준 필요 |
+| 자산 인벤토리 | `public/assets` 75.14 MB, 미사용 4개 약 6.1 MB, 경매 진입 누적 전송 약 14.45 MB | PM이 75.14 MB와 미사용 4개 참조 0을 재확인 |
+| 손상 프로필 | `PLATINUM` 룸 티어 주입 시 `TypeError`와 백지 화면 재현 | 저장 스키마 검증·복구 부재 |
+| 브라우저 스모크 | 로비·경매 콘솔 오류 0건 | 확인 구간 한정 |
+
+### 2026-11-09 / DEV `STAB-002` 자체 검증
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `npm.cmd test` | 18개 테스트 파일, 114개 테스트 통과. 반복 실행 모두 통과 | `tests/stab-002.test.ts` 30개 추가. DEV 자체 실행이며 독립 QA는 아님 |
+| `npm.cmd run build` | `tsc -b && vite build` 통과. JS 362.18 kB, CSS 50.20 kB | 빌드·타입 검증이며 브라우저 E2E를 대신하지 않음 |
+| 손상 프로필 복구 | `PLATINUM` 티어 주입 후 새로고침 시 `BRONZE` 복구, 백지 화면·콘솔 오류 0건 | 인앱 Browser 1회 확인 |
+| 시세 영속화 | 손상 프로필 복구 후 `marketRates`가 localStorage에 저장·복원됨 | 인앱 Browser 1회 확인 |
+| 감정 비용 UI | 브론즈 `item_br_04`에서 `$300` 표시·차감 경로 확인 | 인앱 Browser 1회 확인. 전 룸 반복은 테스트로 대체 |
+| 로비 표기 | 전체 30종, 업적 분모 `0/6`, `v2.3.1`, 다중 탭 미지원 안내 확인 | 데스크톱 1회 |
+
+### 2026-11-09 / QA_DEVOPS `QA-INFRA-001`
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `npm run typecheck` | 테스트 포함 19개 파일 0오류 | `tsconfig.test.json` 신규, 기존 테스트 fixture 오류 해소 |
+| `npm test` | 19개 파일 121개 테스트 통과, 10회 반복 실패 0건 | skip·xfail 0건. UI 7개 포함 |
+| `npm run test:e2e` | Playwright Chromium 11개 통과 | 영어·더치 5라운드, 비밀 봉투, 경찰 3결과, 30종/6종 도감, 모바일 390×844 |
+| `npm run test:coverage` | 문장 74.6%, 분기 58.71%, 함수 65.1%, 줄 76.73% | V8 기준선. 이후 테스트 추가 시 갱신 필요 |
+| axe 기저선 | 로비·도감에 알려진 `button-name` critical 1건 유지 | `A11Y-001`에서 critical 0건으로 강화 필요 |
+| CI 워크플로 | `.github/workflows/qa.yml` 작성 | 실제 GitHub Actions 원격 실행은 `REPO-001`에서 확인 |
+
+### 2026-11-09 / DEV `PERF-ASSET-001`
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `npm run check:assets` | public 1,846.5 KB(1.85 MB), 이미지 104개 1,821.2 KB, 개별 300 KB 이하, 실제 WebP·참조·변형·레거시 제거 통과 | 파일·예산 검사이며 브라우저 렌더를 대신하지 않음 |
+| `npm test` | 20개 파일 126개 테스트 통과 | `tests/perf-asset.test.ts` 5개 추가. DEV 자체 실행 |
+| `npm run test:e2e` | Playwright Chromium 13개 통과 | `tests/e2e/perf-assets.spec.ts` 2개 추가. 로비·도감·업적·경매·이벤트·카드·결과 이미지 렌더와 404 0건 확인 |
+| `npm run typecheck` | 테스트 포함 0오류 | `tsconfig.test.json` 기준 |
+| `npm run build` | `tsc -b && vite build` 통과. 메인 JS 266.04 kB, CSS 51.31 kB, 지연 청크 10개 | 빌드·타입 검증이며 실제 배포 환경 측정은 아님 |
+| `npm run perf:transfer` | 로비 441.4 KiB/6 requests, 경매 진입 추가 176.0 KiB/7 requests | 1280×720, 응답 본문 압축 해제 크기. 예산 500 KB·1.5 MB 이내 |
+| Lighthouse (모바일) | Performance 0.96~1.00(4회), FCP 0.8 s, LCP 0.8 s, TBT 20~230 ms, CLS 0, 총 184 KiB | Edge 157 headless, 모바일 기본 에뮬레이션, 2026-11-09 |
+| Lighthouse (데스크톱) | Performance 1.00, FCP 0.2 s, LCP 0.4 s, TBT 0 ms, CLS 0, 총 224 KiB | Edge 157 headless, `--preset=desktop` |
+| 폰트·배경 | Cinzel 자체 호스팅 로드, Google Fonts 요청 0건, 로비·경매·결과 배경 데스크톱/모바일 분기 확인 | 인앱 Browser·Playwright 1회씩, 전체 브라우저 매트릭스는 아님 |
+
+### 2026-11-09 / DEV `A11Y-001`
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `npm test` | 21개 파일 134개 테스트 통과, 10회 반복 실패 0건 | `tests/a11y-001.test.tsx` 8개 추가. DEV 자체 실행 |
+| `npm run test:e2e` | Playwright Chromium 19개 통과 | `tests/e2e/a11y-keyboard.spec.ts` 6개 추가. 로비·도감·경매·결과 axe, 키보드 5라운드, 확인 모달, 오디오 영속화, reduced-motion |
+| axe serious·critical | 로비·도감·경매·결과 0건 | `@axe-core/playwright`, WCAG 2.0/2.1 A·AA 태그 |
+| axe 수동 확인 | 사운드·커리어 초기화 확인·복원·위탁·확인 모달 0건 | 임시 스크립트로 1회 확인. 전 룸·전 모달 반복은 아님 |
+| Lighthouse 접근성 | **1.00** | Edge 157 headless, 모바일 기본 에뮬레이션 |
+| Lighthouse 성능 | **1.00**, FCP 0.8 s, LCP 0.8 s, TBT 60 ms, CLS 0, 총 186 KiB | 같은 실행. A11Y-001 반영 후 |
+| `npm run typecheck` | 테스트 포함 0오류 | `tsconfig.test.json` 기준 |
+| `npm run build` | `tsc -b && vite build` 통과. 메인 JS 273.75 kB, CSS 52.52 kB | 빌드·타입 검증 |
+| `npm run perf:transfer` | 로비 450.1 KiB/6 requests, 경매 진입 추가 149.6 KiB/7 requests | PERF-ASSET-001 예산 500 KB·1.5 MB 이내 유지 |
+| 키보드 흐름 | 로비→브론즈 입장→입찰→4R 비밀 봉투→결과→도감을 키보드만으로 완주, 모달 Tab 순환·Escape·포커스 복귀 확인 | Playwright Chromium 1회. 실제 스크린리더 수동 검증은 아님 |
+| 실수 방지 | 경매 중 로고·홈은 확인 모달, 로비·도감 초기화는 확인 모달, 취소 시 세션 유지 | E2E 자동화 |
+| reduced-motion | 필수 정보 표시·transition 단축 확인, confetti 생략 | CSS media query와 JS guard |
+| 오디오 설정 | 음소거·SFX·BGM 볼륨 저장, 새로고침 후 복원 | Vitest·Playwright |
+
+### 2026-11-09 / QA_DEVOPS `REPO-001`
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| 추적 해제 | `node_modules` 8,414개·`dist` 61개·`*.tsbuildinfo` 2개 추적 해제, `.gitignore` 추가 | `package-lock.json`은 유지 |
+| Node 26 | `.nvmrc` 26, `engines.node >=26`, `@types/node` 26.6.6, 테스트 `--no-experimental-webstorage` | 로컬 Node 26.13.0·npm 11.20.0. CI Node 26 원격 실행은 push 후 확인 |
+| `npm ci` | lockfile 기준 설치 통과, `--legacy-peer-deps` 불필요 | 로컬 Windows. fresh clone 검증은 커밋 후 수행 |
+| `npm audit` | 전체·프로덕션 모두 **0 vulnerabilities** | Vite 6.4.5·Vitest 4.1.12·plugin-react 4.7.0 적용 |
+| `npm run typecheck` | 테스트 포함 0오류 | 21개 테스트 파일 기준 |
+| `npm test` | 21개 파일 134개 테스트 통과 | skip·xfail 0건 |
+| `npm run test:coverage` | 문장 71.73%, 분기 56.85%, 함수 63%, 줄 74.04% | V8 기준선. 이후 테스트 추가 시 갱신 |
+| `npm run test:e2e` | Playwright Chromium 19개 통과 | 21.5초, trace·screenshot 보존 설정 |
+| `npm run build`·`build:subpath` | 루트·`/simple-auction-game/` 빌드 통과. 메인 JS 274.07 kB | 빌드·타입 검증 |
+| `npm run check:assets` | public 1,846.9 KB, 이미지 104개, WebP·참조·변형 무결성 통과 | 파일·예산 검사 |
+| 배포 검증 | 루트·하위 경로 preview 각각 20 requests·이미지 10개·404 0 | `scripts/verify-deployment.mjs`, Chromium |
+| Lighthouse SEO | 루트·하위 경로 모두 **1.00**, 실패 audit 0 | Lighthouse 13.6.0, Playwright Chromium headless |
+| CI 워크플로 | Node 26, typecheck→asset→coverage→build→subpath build→audit→E2E→artifact | `.github/workflows/qa.yml`. 원격 실행은 push 후 확인 |
+
 ### 구 `docs/`에서 이관한 QA 증거
 
 | 검증 | 결과 | 한계 |
@@ -42,7 +125,9 @@
 | 30종 고유 유물 이미지 | 30개 고유 URL, 파일 존재, WebP HTTP 응답, 데스크톱·모바일 렌더 통과 | 신규 22개 약 24MB의 최적화·성능 예산은 미검증 |
 | 경찰 세 결과 S4 | 사용자 수동 확인 결과 `승인` | QA 에이전트가 동일 Browser에서 직접 재실행한 증거는 아님 |
 
-## 3. 해결된 P0/P1 이슈
+## 3. P0/P1 이슈
+
+### 기존 해결 이슈
 
 | ID | 심각도 | 상태 | 요약 |
 | :--- | :---: | :---: | :--- |
@@ -57,18 +142,43 @@
 | `ISSUE-QA-001` | P1 | QA_VERIFIED | `QA-413` 결정론화 후 표적 20/20·전체 회귀 10/10 독립 통과 |
 | `ISSUE-UI-001` | P2 | QA_VERIFIED | 모바일 도감 필터 6개 높이·줄바꿈·축소·수평 스크롤 독립 통과 |
 
+### 2026-11-09 후속 P1 결함
+
+| ID | 상태 | 요약 | 결정·TASK |
+| :--- | :---: | :--- | :--- |
+| `QD-01` | DEV_COMPLETE | 손상된 `highestRoomTierUnlocked`가 백지 화면과 `TypeError`를 만든다. 검증·복구·`ErrorBoundary` 적용. 독립 QA 대기 | `STAB-002` |
+| `QD-02` | DEV_COMPLETE | 저장 실패가 결과 전이·입장·종료에 전파되지 않는다. 실패 반환·화면 전이 보류·재시도 적용. 독립 QA 대기 | `STAB-002` |
+| `QD-03` | DEV_COMPLETE | 입찰 후 감정·카드 지출로 잔액이 음수가 될 수 있다. 낙찰 예약액 차감 후 지출 적용. 독립 QA 대기 | `STAB-002` |
+| `QD-04` | DEV_COMPLETE | 탈출 정산이 긴급 대출 상환을 차감하지 않는다. `DEC-009` 적용. 독립 QA 대기 | `DEC-009`, `STAB-002` |
+| `QD-05` | DEV_COMPLETE | 경찰 모달이 숨겨진 `realValue`를 노출할 수 있다. 추정 범위·감정 결과만 표시. 독립 QA 대기 | `STAB-002` |
+| `QD-06` | DEV_COMPLETE | 위탁 판매가 보존 배수를 이중 적용할 수 있다. 단일 payout 함수 적용. 독립 QA 대기 | `DEC-011`, `STAB-002` |
+| `QD-07` | DEV_COMPLETE | 시장 시세가 새로고침으로 초기화되어 `DUMP` 회피가 가능하다. 프로필 영속화·복원 적용. 독립 QA 대기 | `STAB-002` |
+| `QD-08` | DEV_COMPLETE | 감정 비용이 아이템별 `appraisalCost`와 상수 $500으로 불일치한다. 아이템별 비용 적용. 독립 QA 대기 | `DEC-010`, `STAB-002` |
+| `QD-09` | DEV_COMPLETE | 세션 순위와 보관함·위탁의 보존 상태 평가가 다르다. 단일 평가 계약 적용. 독립 QA 대기 | `DEC-011`, `STAB-002` |
+
 ## 4. 릴리즈 차단 이슈
 
-- 미해결 P0/P1 이슈는 없다. 위 이슈는 모두 `QA_VERIFIED` 또는 `USER_VERIFIED / QA_ACCEPTED`다.
-- v2.3.1은 `RELEASE_CANDIDATE`이며, PM의 릴리즈 승인 판정만 남아 있다.
+- 기존 `STAB-001`의 P0/P1 이슈는 모두 `QA_VERIFIED` 또는 `USER_VERIFIED / QA_ACCEPTED`다.
+- `STAB-002`의 P1 `QD-01`~`QD-09`는 DEV 구현·자체 검증을 완료했다. 독립 QA_DEVOPS 검증은 아직 수행하지 않았다.
+- `QA-INFRA-001`은 완료했다. 테스트 포함 타입 검사 0오류, Vitest 121개·Playwright 11개, 커버리지 기준선, CI 워크플로를 확보했다.
+- `PERF-ASSET-001`은 DEV 구현·자체 검증을 완료했다. public 1.85 MB, 로비 441.4 KiB, 경매 진입 추가 176.0 KiB, Lighthouse 0.96~1.00(모바일·4회)·1.00(데스크톱)을 기록했다.
+- `A11Y-001`은 DEV 구현·자체 검증을 완료했다. axe serious·critical 0건, Lighthouse 접근성 1.00, 키보드 5라운드 E2E 6개, 확인 모달·reduced-motion·오디오 영속화를 확인했다.
+- A11Y-001 반영 후에도 PERF-ASSET-001 예산은 유지된다. 로비 450.1 KiB, 경매 진입 추가 149.6 KiB, Lighthouse 총 186 KiB다.
+- `REPO-001`은 완료했다. Node 26·CI·배포 위생, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00을 확인했다. Vercel 프로젝트는 사용자가 pause 상태로 두어 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다.
+- v2.3.1은 `RELEASE_CANDIDATE`이지만 `REL-001`은 **보류**다. `DOC-003`·`QA-REBASE-001` 등 1~7번째 후속 TASK 완료 후 재판정한다.
 
 ## 5. 알려진 제한사항과 미검증 범위
 
-- 저장 실패 강제 주입과 손상 데이터 전체 조합
-- 전체 접근성 검증
+- `STAB-002`의 저장 실패·손상 프로필·구버전 프로필 복구는 DEV 테스트로 고정했지만 독립 QA_DEVOPS 재검증은 미수행
+- `ErrorBoundary`의 실제 렌더 오류 유도, 경찰 모달 숨은 가치 비노출, 위탁·비밀 봉투 UI의 전 룸 브라우저 반복은 미검증
+- 테스트 포함 타입 검사 12개 오류는 `QA-INFRA-001`에서 0개로 해소
+- Lighthouse 기준선은 로컬 Edge 157 headless 1회 측정이다. 실제 배포 CDN·압축·다중 기기·반복 측정은 `REPO-001`·`QA-REBASE-001` 범위다.
+- Lighthouse 접근성은 A11Y-001 반영 후 1.00이다. 실제 스크린리더(NVDA·VoiceOver) 수동 검증과 다중 브라우저 키보드 반복은 미검증이다.
+- 경찰 급습과 비밀 봉투 공개 전 모달은 필수 선택을 우회하지 않도록 Escape 닫기를 의도적으로 막고 포커스 트랩만 적용한다.
+- `npm audit` 개발 의존성 취약점은 0건이다. `REPO-001`에서 Vite·Vitest·transitive 패치를 적용했고 `npm audit --omit=dev`도 0건이다.
+- CI 원격 실행과 Vercel 배포 헤더·CDN 검증은 아직 미확인이다. Vercel 프로젝트는 사용자가 pause 상태로 두었다.
 - 다중 브라우저·다중 모바일 브라우저
 - 장기 랜덤 반복과 성능 반복
-- 신규 22개 lossless WebP 약 24MB의 최적화와 초기 로딩 예산
 - 경찰 탈출·뇌물·체포 S4는 사용자 수동 확인이며 QA 에이전트 직접 재실행은 아님
 - 5라운드 E2E는 잉글리시·더치 각각 1회 완주이며 반복·다중 환경은 아님
 
@@ -76,17 +186,25 @@
 
 - `STAB-001`: `DONE` — QA 최종 승인 완료. 원문: `.md/root/archive/v2.3.1/STAB-001.md`
 - `DOC-002`: `DONE` — 구 `docs/`를 `.md/`로 이관하고 `docs/` 삭제. 원문: `.md/root/archive/TASKS_PHASE_01.md`
-- `REL-001`: `[ ]` 대기 — PM의 v2.3.1 릴리즈 승인 판정
-- `QA-REBASE-001`: `[!]` 블로커 — 테스트와 인수 조건의 추적성 재작성
+- `STAB-002`: `[x]` DEV_COMPLETE — P1 9건과 동반 P2 구현·자체 검증 완료, 독립 QA_DEVOPS 검증 대기
+- `QA-INFRA-001`: `[x]` DONE — 테스트 포함 타입 검사 0오류, Vitest 121개, Playwright 11개, 커버리지·CI 기반
+- `PERF-ASSET-001`: `[x]` DEV_COMPLETE — public 1.85 MB, 로비 441.4 KiB, 경매 추가 176.0 KiB, Lighthouse 0.96~1.00, 독립 QA_DEVOPS 재검증 대기
+- `A11Y-001`: `[x]` DEV_COMPLETE — axe serious·critical 0, Lighthouse 접근성 1.00, 키보드·확인 모달·reduced-motion·오디오 영속화 검증, 독립 QA_DEVOPS 재검증 대기
+- `REPO-001`: `[x]` DONE — Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00
+- `DOC-003`: `[ ]` 대기 — `.md/root/TASKS.md` Backlog 참조
+- `REL-001`: `[ ]` **보류** — 2026-11-09 PM 판정. 후속 P1 TASK 1~7번째 완료 후 재판정
+- `QA-REBASE-001`: `[!]` 블로커 — `QA-INFRA-001`·`DOC-003` 결과 후 추적성 재작성
 - `ARCH-PVP-001`: `[!]` 블로커 — 서버 권위형 Phase 3 사전 아키텍처
 - Phase 3 실시간 PVP: v2.3.1 릴리즈 승인과 서버 권위 설계 전 착수 금지
 
 ## 7. 다음 시작 지점
 
-1. PM: `REL-001`의 DoD에 따라 v2.3.1 `PM_RELEASE_APPROVED` 여부를 판정한다.
-2. QA_DEVOPS: `QA-REBASE-001` 블로커 해제 조건과 범위를 재정의한다.
-3. DEV: `ARCH-PVP-001`은 릴리즈 승인과 서버 권위 계약 전까지 착수하지 않는다.
-4. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
+1. QA_DEVOPS: `STAB-002`·`PERF-ASSET-001`·`A11Y-001`의 독립 검증을 수행한다. 현재 기준선은 Vitest 21개 파일 134개, Playwright 19개, axe serious·critical 0, Lighthouse 접근성 1.00이다.
+2. QA_DEVOPS: `PERF-ASSET-001` 예산과 `A11Y-001` 키보드·axe를 독립 재현한다. `npm run check:assets`, `npm run perf:transfer`, Lighthouse, `tests/e2e/a11y-keyboard.spec.ts`를 확인한다.
+3. PM·QA_DEVOPS: `DOC-003`에서 문서·스키마·추적성을 정합한 뒤 `QA-REBASE-001`을 해제한다. `REPO-001`의 원격 CI 실행과 Vercel 재개 후 헤더 검증 결과를 반영한다.
+4. PM: 1~7번째 TASK 완료 후 `REL-001`을 재판정한다.
+5. DEV: QA_DEVOPS가 보고한 결함을 수정한다. `QD-28`(시드 기반 RNG·세션 이벤트 로그)은 후속 TASK 후보로 분리한다.
+6. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
 
 ## 8. 문서 권위와 이관
 

@@ -15,7 +15,11 @@ import {
   XCircle
 } from 'lucide-react';
 import { useAuctionStore } from '../../stores/useAuctionStore';
-import { BID_INCREMENT_OPTIONS, APPRAISAL_CONFIG, LOAN_CONFIG } from '../../data/constants';
+import { BID_INCREMENT_OPTIONS, LOAN_CONFIG } from '../../data/constants';
+import { getAppraisalCost } from '../../services/itemValueService';
+import { assetUrl, assetSrcSet } from '../../services/assetService';
+import { getItemLotLabel } from '../../services/itemDisplayService';
+import { AssetImage } from '../common/AssetImage';
 import { MarketEventModal } from './MarketEventModal';
 import { AppraisalModal } from './AppraisalModal';
 import { SealedBidModal } from './SealedBidModal';
@@ -55,6 +59,17 @@ export const AuctionGameView: React.FC = () => {
 
   const humanPlayer = players.find((p) => p.isHuman);
   const userCash = humanPlayer?.cash ?? 0;
+  const appraisalCost = getAppraisalCost(currentItem);
+  const committedBid = fsmState === 'BIDDING_ACTIVE' && highestBidder?.id === humanPlayer?.id
+    ? currentHighestBid
+    : 0;
+  const spendableCash = userCash - committedBid;
+  const timerAnnouncement = [10, 5, 3, 2, 1].includes(timeLeft)
+    ? `경매 종료까지 ${timeLeft}초`
+    : '';
+  const bidAnnouncement = highestBidder
+    ? `현재 최고가 ${currentHighestBid.toLocaleString()}달러, ${highestBidder.name}`
+    : '아직 입찰 없음';
 
   // 잉글리시 & 비밀 경매 타이머 틱 인터벌
   useEffect(() => {
@@ -66,12 +81,13 @@ export const AuctionGameView: React.FC = () => {
     }
   }, [auctionMode, fsmState, tickTimer]);
 
-  // 비밀 경매 기본값 세팅
+  // QD-23: 라운드·출품작이 바뀔 때만 입력값을 시작가로 초기화한다.
+  // 사용자가 0원 기권을 입력한 뒤 재렌더되어도 값을 덮어쓰지 않는다.
   useEffect(() => {
-    if (currentItem && sealedBidInput === 0) {
+    if (currentItem) {
       setSealedBidInput(currentItem.startingBid);
     }
-  }, [currentItem, sealedBidInput]);
+  }, [currentRound, currentItem?.id]);
 
   if (!currentItem) {
     return (
@@ -110,11 +126,14 @@ export const AuctionGameView: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative"
-      style={{ backgroundImage: `url('/assets/images/backgrounds/bg_auction_hall.webp')` }}
+      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative bg-auction-pattern"
     >
       {/* Dark Luxury Overlay */}
       <div className="absolute inset-0 bg-navy-950/85 backdrop-blur-[2px]" />
+
+      {/* A11Y-001: 타이머는 10·5·3·2·1초에서만, 입찰가는 변경 시마다 보조기기에 알린다. */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{timerAnnouncement}</div>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{bidAnnouncement}</div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
         {/* Active Market Event Banner (3R, 5R) */}
@@ -122,8 +141,13 @@ export const AuctionGameView: React.FC = () => {
           <div className="p-3.5 rounded-2xl bg-gradient-to-r from-red-950/90 via-navy-900 to-navy-950 border border-red-500/40 flex items-center justify-between shadow-xl animate-pulse-fast backdrop-blur-md">
             <div className="flex items-center gap-3">
               {activeMarketEvent.imageUrl ? (
-                <img
+                <AssetImage
                   src={activeMarketEvent.imageUrl}
+                  srcSet={assetSrcSet(activeMarketEvent.imageUrl, 512, '-256', 256)}
+                  sizes="56px"
+                  width={512}
+                  height={286}
+                  loading="eager"
                   alt={activeMarketEvent.title}
                   className="w-14 h-10 rounded-lg object-cover border border-red-500/50 shadow-md flex-shrink-0"
                 />
@@ -140,7 +164,9 @@ export const AuctionGameView: React.FC = () => {
               </div>
             </div>
             <span className="text-xs font-mono font-bold text-gold-400 bg-navy-950 px-3 py-1 rounded-full border border-slate-700 shadow-inner">
-              {activeMarketEvent.effectType === 'CATEGORY_MULTIPLIER' ? `${activeMarketEvent.targetCategory} 가치 1.5배` : '지원금 $1,500 지급'}
+              {activeMarketEvent.effectType === 'CATEGORY_MULTIPLIER'
+                ? `${activeMarketEvent.targetCategory} 가치 ${activeMarketEvent.multiplier ?? 1.5}배`
+                : `지원금 $${(activeMarketEvent.cashAmount ?? 0).toLocaleString()} 지급`}
             </span>
           </div>
         )}
@@ -156,7 +182,7 @@ export const AuctionGameView: React.FC = () => {
                 </>
               ) : isRound4 ? (
                 <>
-                  <img src="/assets/images/ui/icon_sealed_envelope.webp" alt="봉투" className="w-5 h-5 object-contain" />
+                  <AssetImage src={assetUrl('/assets/images/ui/icon_sealed_envelope.webp')} width={128} height={128} alt="봉투" className="w-5 h-5 object-contain" />
                   <span>4R 비밀 봉투 경매 (Sealed-Bid)</span>
                 </>
               ) : (
@@ -180,7 +206,11 @@ export const AuctionGameView: React.FC = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="flex items-center gap-1.5 font-mono text-sm font-bold">
                 <Clock className={`w-4 h-4 ${isUrgent ? 'text-red-400 animate-spin' : 'text-gold-400'}`} />
-                <span className={`text-lg ${isUrgent ? 'text-red-400 font-black animate-pulse' : 'text-gold-300'}`}>
+                <span
+                  role="timer"
+                  aria-label={`남은 시간 ${timeLeft}초`}
+                  className={`text-lg ${isUrgent ? 'text-red-400 font-black animate-pulse' : 'text-gold-300'}`}
+                >
                   {timeLeft}s
                 </span>
               </div>
@@ -234,8 +264,13 @@ export const AuctionGameView: React.FC = () => {
 
               {/* Item Image with Badges & Stamp Overlay */}
               <div className="relative md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-slate-900 border-2 border-gold-500/40 group shadow-2xl">
-                <img
+                <AssetImage
                   src={currentItem.imageUrl}
+                  srcSet={assetSrcSet(currentItem.imageUrl, 512, '-256', 256)}
+                  sizes="(min-width: 1024px) 420px, (min-width: 768px) 45vw, 90vw"
+                  width={512}
+                  height={512}
+                  loading="eager"
                   alt={currentItem.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -247,8 +282,10 @@ export const AuctionGameView: React.FC = () => {
                 {/* STAMP OVERLAYS (진품 / 위작 Reveal 시 투명 배경 스탬프 이펙트) */}
                 {fsmState === 'ROUND_REVEAL' && currentItem.isFake && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-gavel-strike pointer-events-none">
-                    <img
-                      src="/assets/images/ui/stamp_fake.webp"
+                    <AssetImage
+                      src={assetUrl('/assets/images/ui/stamp_fake.webp')}
+                      width={256}
+                      height={256}
                       alt="위작 판정"
                       className="w-52 h-52 object-contain drop-shadow-2xl -rotate-12 transform scale-110"
                     />
@@ -256,8 +293,10 @@ export const AuctionGameView: React.FC = () => {
                 )}
                 {fsmState === 'ROUND_REVEAL' && !currentItem.isFake && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] animate-bounce-short pointer-events-none">
-                    <img
-                      src="/assets/images/ui/stamp_genuine.webp"
+                    <AssetImage
+                      src={assetUrl('/assets/images/ui/stamp_genuine.webp')}
+                      width={256}
+                      height={256}
                       alt="진품 판정"
                       className="w-48 h-48 object-contain drop-shadow-2xl"
                     />
@@ -301,7 +340,7 @@ export const AuctionGameView: React.FC = () => {
               <div className="md:w-1/2 flex flex-col justify-between space-y-4">
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono text-slate-400">LOT #{currentItem.id.toUpperCase()}</span>
+                    <span className="text-xs font-mono text-slate-400">{getItemLotLabel(currentItem.id)}</span>
                     {currentItem.synergyPairName && (
                       <span className="text-[10px] px-2 py-0.5 rounded bg-gold-500/10 text-gold-400 border border-gold-500/30 font-medium">
                         ✨ {currentItem.synergyPairName}
@@ -346,7 +385,7 @@ export const AuctionGameView: React.FC = () => {
                           </span>
                           {highestBidder && !highestBidder.isHuman && (
                             <div className="p-2.5 rounded-xl bg-red-950/90 border border-red-500 text-red-200 text-xs font-serif font-bold text-left flex items-center gap-2.5 shadow-md">
-                              <img src={highestBidder.avatar} alt={highestBidder.name} className="w-8 h-8 rounded-lg border border-red-400 object-cover flex-shrink-0" />
+                              <AssetImage src={highestBidder.avatar} srcSet={assetSrcSet(highestBidder.avatar, 128, '-64', 64)} sizes="32px" width={128} height={128} alt={highestBidder.name} className="w-8 h-8 rounded-lg border border-red-400 object-cover flex-shrink-0" />
                               <div className="min-w-0">
                                 <span className="text-[10px] text-red-400 block">{highestBidder.name}의 절규:</span>
                                 <span className="text-red-100 italic block truncate">"{highestBidder.lastDialogue || '아아악!! 가짜라고?! 러그풀 사기당했다!!'}"</span>
@@ -399,7 +438,7 @@ export const AuctionGameView: React.FC = () => {
                     <div className="flex justify-between items-center pt-2 border-t border-slate-800">
                       <div>
                         <span className="text-xs text-slate-400 block">현재 최고 호가</span>
-                        <span className="font-serif font-black text-2xl text-emerald-400">
+                        <span aria-live="polite" aria-atomic="true" className="font-serif font-black text-2xl text-emerald-400">
                           ${currentHighestBid.toLocaleString()}
                         </span>
                       </div>
@@ -463,7 +502,7 @@ export const AuctionGameView: React.FC = () => {
               <div className="bg-navy-950/75 border border-gold-500/30 rounded-3xl p-6 shadow-2xl space-y-4 backdrop-blur-md">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif text-sm sm:text-base font-bold text-gold-300 flex items-center gap-2">
-                    <img src="/assets/images/ui/icon_sealed_envelope.webp" alt="봉투" className="w-5 h-5 object-contain" />
+                    <AssetImage src={assetUrl('/assets/images/ui/icon_sealed_envelope.webp')} width={128} height={128} alt="봉투" className="w-5 h-5 object-contain" />
                     <span>비밀 봉투 입찰가 제출 (1회 한정)</span>
                   </h3>
                   <span className="text-xs font-mono text-slate-300">내 잔고: <strong className="text-emerald-400 font-black">${userCash.toLocaleString()}</strong></span>
@@ -471,7 +510,7 @@ export const AuctionGameView: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <input
                     type="number"
-                    min={currentItem.startingBid}
+                    min={0}
                     max={userCash}
                     step={500}
                     value={sealedBidInput}
@@ -479,10 +518,16 @@ export const AuctionGameView: React.FC = () => {
                     className="w-full sm:flex-1 min-h-[48px] bg-navy-900 border border-slate-700 rounded-2xl px-4 py-3 text-lg sm:text-xl font-mono font-black text-gold-300 focus:outline-none focus:border-gold-500 shadow-inner"
                   />
                   <button
+                    onClick={() => submitSealedBid(0)}
+                    className="w-full sm:w-auto min-h-[48px] px-5 py-3.5 rounded-2xl bg-navy-900 border border-slate-700 text-slate-300 font-bold text-sm hover:border-slate-500 active:scale-95 transition-all duration-150 ease-out cursor-pointer"
+                  >
+                    0원 기권
+                  </button>
+                  <button
                     onClick={handleSealedBidSubmit}
                     className="w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-2xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-serif font-black text-sm hover:brightness-110 active:scale-95 transition-all duration-150 ease-out shadow-lg shadow-gold-500/25 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <img src="/assets/images/ui/icon_sealed_envelope.webp" alt="봉투" className="w-4 h-4 object-contain" />
+                    <AssetImage src={assetUrl('/assets/images/ui/icon_sealed_envelope.webp')} width={128} height={128} alt="봉투" className="w-4 h-4 object-contain" />
                     <span>봉투 밀봉 제출</span>
                   </button>
                 </div>
@@ -543,7 +588,7 @@ export const AuctionGameView: React.FC = () => {
                 onClick={requestAppraisal}
                 disabled={
                   !humanPlayer ||
-                  userCash < APPRAISAL_CONFIG.COST ||
+                  spendableCash < appraisalCost ||
                   currentItem.isAppraised ||
                   fsmState === 'ROUND_REVEAL'
                 }
@@ -553,7 +598,7 @@ export const AuctionGameView: React.FC = () => {
                   <span className="flex items-center gap-1.5">
                     <Search className="w-4 h-4 text-blue-400" /> 감정사 의뢰
                   </span>
-                  <span className="text-gold-400 font-mono font-black">${APPRAISAL_CONFIG.COST}</span>
+                  <span className="text-gold-400 font-mono font-black">${appraisalCost.toLocaleString()}</span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1 font-sans">
                   {currentItem.isAppraised ? '감정 완료됨' : '진품/위작 정밀 브리핑'}
@@ -568,7 +613,7 @@ export const AuctionGameView: React.FC = () => {
               >
                 <div className="flex items-center justify-between text-xs font-bold text-slate-200">
                   <span className="flex items-center gap-1.5">
-                    <img src="/assets/images/ui/icon_vip_loan.webp" alt="VIP 대출" className="w-4 h-4 object-contain" />
+                    <AssetImage src={assetUrl('/assets/images/ui/icon_vip_loan.webp')} width={128} height={128} alt="VIP 대출" className="w-4 h-4 object-contain" />
                     <span>VIP 긴급 대출</span>
                   </span>
                   <span className="text-emerald-400 font-mono font-black">+${LOAN_CONFIG.AMOUNT.toLocaleString()}</span>
@@ -593,8 +638,12 @@ export const AuctionGameView: React.FC = () => {
                     title={card.description}
                   >
                     {card.imageUrl && (
-                      <img
+                      <AssetImage
                         src={card.imageUrl}
+                        srcSet={assetSrcSet(card.imageUrl, 256, '-128', 128)}
+                        sizes="32px"
+                        width={256}
+                        height={256}
                         alt={card.name}
                         className="w-8 h-8 rounded-lg object-cover border border-gold-500/30 flex-shrink-0"
                       />
@@ -633,8 +682,12 @@ export const AuctionGameView: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <img
+                        <AssetImage
                           src={p.avatar}
+                          srcSet={assetSrcSet(p.avatar, 128, '-64', 64)}
+                          sizes="40px"
+                          width={128}
+                          height={128}
                           alt={p.name}
                           className="w-10 h-10 rounded-xl object-cover border-2 border-slate-700 shadow-sm"
                         />

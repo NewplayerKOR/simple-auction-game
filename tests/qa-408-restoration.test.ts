@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useCareerStore, STORAGE_KEY_V2 } from '../src/stores/useCareerStore';
+import { useCareerStore } from '../src/stores/useCareerStore';
 import { MASTER_ITEMS } from '../src/data/masterItems';
-import { RESTORATION_CONFIG } from '../src/data/constants';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};

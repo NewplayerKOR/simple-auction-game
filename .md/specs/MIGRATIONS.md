@@ -3,7 +3,7 @@
 > **관리 원칙:** Flyway-style 문서 버전 로그  
 > **상태:** DOCUMENTATION_ONLY (실제 DB 없음)  
 > **기술 소유:** DEV  
-> **최종 상태 검토일:** 2026-11-08  
+> **최종 상태 검토일:** 2026-11-09  
 > **관련 문서:** [DATA_SCHEMA.md](./DATA_SCHEMA.md)  
 
 ---
@@ -24,6 +24,7 @@
 | **`V2.2.0`** | `restoration_failure_extreme_market_and_smart_ai` | DB Lead & PM | 2026-08-20 | Documented |
 | **`V2.3.0`** | `black_market_contraband_and_sealed_bid_fix` | DB Lead & PM | 2026-08-20 | Documented |
 | **`V2.3.1`** | `stabilize_session_settlement_and_curse_contracts` | DEV | 2026-08-21 | Runtime Implemented / QA_VERIFIED (STAB-001) |
+| **`V2.3.1-STAB002`** | `persist_market_rates_and_harden_profile_recovery` | DEV | 2026-11-09 | Runtime Implemented / DEV Verified (STAB-002) |
 
 ---
 
@@ -62,3 +63,23 @@
 - **롤백 한계:**
   - 실제 DB 마이그레이션이 아니므로 DDL 롤백은 없다.
   - v2.3.0 코드로 되돌릴 경우 알 수 없는 선택 필드는 JSON 파싱상 무시될 수 있지만, 역호환은 DEV 테스트 전까지 보장하지 않는다.
+
+---
+
+### 📌 `V2.3.1-STAB002__persist_market_rates_and_harden_profile_recovery`
+
+- **상태:** Runtime Implemented / DEV Verified (STAB-002) — TypeScript·LocalStorage 런타임과 DEV 회귀 테스트에 반영했다. 실제 DB 마이그레이션이 아니며 독립 QA는 남아 있다.
+- **대상 TASK:** `STAB-002` `QD-01`~`QD-09`, `QD-31`~`QD-36`
+- **적용 변경:**
+  1. `PersistentCareerProfile.marketRates?: CategoryMarketRates`를 추가해 새로고침 후에도 카테고리 시세를 유지한다.
+  2. `vaultItemStates`의 조건·잭팟, 업적 ID, `highestRoomTierUnlocked`, 티켓·통계 카운터를 로드 시 검증·정규화한다.
+  3. 손상 원문과 직전 저장 원문을 `SIMPLE_AUCTION_CAREER_V2_BACKUP`에 보관한다.
+  4. 저장 실패를 호출자에게 반환해 입장·정산·결과 전이를 보류한다.
+- **로드 규칙:**
+  - `marketRates`가 없거나 손상되면 현재 `totalGamesPlayed` 기준으로 새 시세를 생성한다.
+  - 시세 배율은 `0.4 ~ 3.5` 범위로 보정한다.
+  - 잘못된 `highestRoomTierUnlocked`는 `careerNetWorth` 기준으로 재계산한다.
+  - `storageVersion`은 `2.3.1`을 유지한다. 이 변경은 선택 필드 추가이므로 기존 프로필과 역호환된다.
+- **롤백 한계:**
+  - 실제 DB 마이그레이션이 아니므로 DDL 롤백은 없다.
+  - v2.3.1 이전 코드로 되돌리면 `marketRates`는 JSON에서 무시되고 세션 시세가 초기화된다.

@@ -2,13 +2,26 @@
 <html lang="ko" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Sotheby's Royale은 잉글리시·비밀 봉투·더치 경매를 즐기는 싱글플레이 경매 경제 시뮬레이션 게임입니다."
+    />
+    <meta name="theme-color" content="#080c17" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sotheby's Royale - Simple Auction Game" />
+    <meta
+      property="og:description"
+      content="30종 유물, 암시장, 커리어 성장을 담은 브라우저 경매 경제 시뮬레이션."
+    />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Sotheby's Royale - Simple Auction Game</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- PERF-ASSET-001: 자체 호스팅 Cinzel 라틴 서브셋과 로비 LCP 배경을 미리 불러온다. -->
+    <link rel="preload" href="/assets/fonts/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/images/backgrounds/bg_lobby-960.webp" as="image" media="(max-width: 767px)">
+    <link rel="preload" href="/assets/images/backgrounds/bg_lobby.webp" as="image" media="(min-width: 768px)">
   </head>
   <body class="bg-navy-950 text-slate-100 min-h-screen font-sans selection:bg-gold-500 selection:text-navy-950 overflow-x-hidden">
     <div id="root"></div>

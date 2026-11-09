@@ -3,12 +3,22 @@ import { AiBotService } from '../src/services/aiBotService';
 import { MASTER_BOTS } from '../src/data/masterBots';
 import { MASTER_ITEMS } from '../src/data/masterItems';
 import { BOT_FORGERY_REACTIONS } from '../src/data/constants';
+import { Player } from '../src/types';
+
+const makeBot = (persona: 'WARREN' | 'DOGE' | 'PICASSO', cash = 100000): Player => ({
+  ...MASTER_BOTS.find((b) => b.persona === persona)!,
+  cash,
+  inventory: [],
+  chanceCards: [],
+  hasTakenLoan: false,
+  loanRepaymentAmount: 0,
+});
 
 describe('QA-410: 지능형 AI 입찰 (Smart Early Fold) & 위작 피격 리액션 대사', () => {
   it('봇 위작 피격 시 페르소나별 분노/절망 대사가 정상 매핑되어야 한다', () => {
-    const dogeBot = MASTER_BOTS.find((b) => b.persona === 'DOGE')!;
-    const warrenBot = MASTER_BOTS.find((b) => b.persona === 'WARREN')!;
-    const picassoBot = MASTER_BOTS.find((b) => b.persona === 'PICASSO')!;
+    const dogeBot = makeBot('DOGE');
+    const warrenBot = makeBot('WARREN');
+    const picassoBot = makeBot('PICASSO');
 
     const dogeReaction = AiBotService.getReactionDialogue(dogeBot, 'FORGERY');
     const warrenReaction = AiBotService.getReactionDialogue(warrenBot, 'FORGERY');
@@ -20,7 +30,7 @@ describe('QA-410: 지능형 AI 입찰 (Smart Early Fold) & 위작 피격 리액�
   });
 
   it('워렌(WARREN)은 감정 최소가 이상으로 호가가 오르면 즉시 입찰을 조기 포기(Fold)해야 한다', () => {
-    const warrenBot = { ...MASTER_BOTS.find((b) => b.persona === 'WARREN')!, cash: 100000 };
+    const warrenBot = makeBot('WARREN');
     const item = MASTER_ITEMS[0]; // estimatedMin: 1500
 
     const decision = AiBotService.evaluateBid(
@@ -36,7 +46,7 @@ describe('QA-410: 지능형 AI 입찰 (Smart Early Fold) & 위작 피격 리액�
   });
 
   it('피카소(PICASSO)는 회화가 아닌 골동품/보석 고가 호가 시 높은 확률로 조기 포기해야 한다', () => {
-    const picassoBot = { ...MASTER_BOTS.find((b) => b.persona === 'PICASSO')!, cash: 100000 };
+    const picassoBot = makeBot('PICASSO');
     const antiqueItem = MASTER_ITEMS.find((m) => m.category === 'ANTIQUE')!;
 
     let foldCount = 0;

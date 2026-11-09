@@ -244,6 +244,7 @@ export interface PersistentCareerProfile {
   bankruptcyCount: number;         // 누적 파산 신청 횟수
   activeSession?: ActiveCareerSession;
   lastSettlementReceipt?: CareerSettlementReceipt;
+  marketRates?: CategoryMarketRates; // QD-07: 새로고침으로 시세를 회피하지 못하도록 프로필에 함께 저장
   lastUpdatedTimestamp: number;
 }
 

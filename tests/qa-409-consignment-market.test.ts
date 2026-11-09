@@ -61,7 +61,7 @@ describe('QA-409: 코인급 극심한 시세 변동(-60%~+300%) & 위탁 리셀 
     });
 
     const expectedPayout = Math.round(item.realValue * 1.0 * 2.5);
-    const { soldItem, payout } = useCareerStore.getState().sellConsignmentItem(item.id);
+    const { payout } = useCareerStore.getState().sellConsignmentItem(item.id);
 
     expect(payout).toBe(expectedPayout);
     expect(useCareerStore.getState().profile.careerCash).toBe(initialCash + expectedPayout);

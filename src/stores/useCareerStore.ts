@@ -10,19 +10,24 @@ import {
   ItemCategory,
   CareerSettlementCommand,
   CareerSettlementReceipt,
+  ActiveCareerSession,
 } from '../types';
 import { ROOM_TIERS_MASTER, ROOM_TIER_ORDER } from '../data/roomTiers';
 import { MASTER_ITEMS } from '../data/masterItems';
 import { MASTER_ACHIEVEMENTS } from '../data/masterAchievements';
-import { BANKRUPTCY_CONFIG, RESTORATION_CONFIG } from '../data/constants';
+import { BANKRUPTCY_CONFIG } from '../data/constants';
 import {
-  applyDumpLossCurse,
   applyEndGameCashCurse,
   getOwnedCurseCodes,
   getRestorationProbabilities,
 } from '../services/contrabandService';
+import {
+  calculateConsignmentPayout,
+  getItemConditionMultiplier,
+} from '../services/itemValueService';
 
 export const STORAGE_KEY_V2 = 'SIMPLE_AUCTION_CAREER_V2';
+export const STORAGE_BACKUP_KEY = 'SIMPLE_AUCTION_CAREER_V2_BACKUP';
 
 export const INITIAL_CAREER_PROFILE: PersistentCareerProfile = {
   storageVersion: '2.3.1',
@@ -55,6 +60,110 @@ const toNonNegativeInteger = (value: unknown, fallback = 0): number => {
 const toFiniteNumber = (value: unknown, fallback: number): number => {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
+};
+
+const VALID_ITEM_IDS = new Set(MASTER_ITEMS.map((item) => item.id));
+const VALID_ACHIEVEMENT_IDS = new Set(MASTER_ACHIEVEMENTS.map((achievement) => achievement.id));
+const VALID_CONDITIONS: ItemCondition[] = ['PRISTINE', 'DUSTY', 'DAMAGED', 'RUINED'];
+
+const isRoomTier = (value: unknown): value is RoomTier =>
+  typeof value === 'string' && (ROOM_TIER_ORDER as string[]).includes(value);
+
+const isItemCondition = (value: unknown): value is ItemCondition =>
+  typeof value === 'string' && (VALID_CONDITIONS as string[]).includes(value);
+
+const deriveHighestTier = (netWorth: number): RoomTier => {
+  if (netWorth >= ROOM_TIERS_MASTER.DIAMOND.minNetWorthRequired) return 'DIAMOND';
+  if (netWorth >= ROOM_TIERS_MASTER.GOLD.minNetWorthRequired) return 'GOLD';
+  if (netWorth >= ROOM_TIERS_MASTER.SILVER.minNetWorthRequired) return 'SILVER';
+  return 'BRONZE';
+};
+
+const normalizeVaultItemIds = (raw: unknown): string[] => {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.filter(
+    (id): id is string => typeof id === 'string' && VALID_ITEM_IDS.has(id)
+  ))];
+};
+
+const normalizeVaultItemStates = (
+  raw: unknown,
+  vaultItemIds: string[]
+): Record<string, { condition: ItemCondition; isJackpot?: boolean }> => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const validIdSet = new Set(vaultItemIds);
+  const states: Record<string, { condition: ItemCondition; isJackpot?: boolean }> = {};
+
+  Object.entries(raw as Record<string, unknown>).forEach(([id, value]) => {
+    if (!validIdSet.has(id) || !value || typeof value !== 'object') return;
+    const candidate = value as { condition?: unknown; isJackpot?: unknown };
+    if (!isItemCondition(candidate.condition)) return;
+    states[id] = {
+      condition: candidate.condition,
+      isJackpot: candidate.isJackpot === true,
+    };
+  });
+
+  return states;
+};
+
+const normalizeAchievementIds = (raw: unknown): string[] => {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.filter(
+    (id): id is string => typeof id === 'string' && VALID_ACHIEVEMENT_IDS.has(id)
+  ))];
+};
+
+const normalizeActiveSession = (raw: unknown): ActiveCareerSession | undefined => {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const candidate = raw as Partial<ActiveCareerSession>;
+  if (
+    candidate.status !== 'ACTIVE' ||
+    typeof candidate.sessionId !== 'string' ||
+    candidate.sessionId.length === 0 ||
+    !isRoomTier(candidate.tier) ||
+    typeof candidate.entryFee !== 'number' ||
+    !Number.isFinite(candidate.entryFee) ||
+    typeof candidate.sessionCashStart !== 'number' ||
+    !Number.isFinite(candidate.sessionCashStart) ||
+    (candidate.ticketConsumed !== 0 && candidate.ticketConsumed !== 1)
+  ) {
+    return undefined;
+  }
+
+  return {
+    sessionId: candidate.sessionId,
+    tier: candidate.tier,
+    entryFee: Math.max(0, Math.floor(candidate.entryFee)),
+    sessionCashStart: candidate.sessionCashStart,
+    ticketConsumed: candidate.ticketConsumed,
+    status: 'ACTIVE',
+  };
+};
+
+const normalizeSettlementReceipt = (raw: unknown): CareerSettlementReceipt | undefined => {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const candidate = raw as Partial<CareerSettlementReceipt>;
+  const validOutcomes = ['NORMAL', 'ESCAPED', 'ARRESTED', 'ABANDONED'];
+  if (
+    typeof candidate.sessionId !== 'string' ||
+    typeof candidate.outcome !== 'string' ||
+    !validOutcomes.includes(candidate.outcome) ||
+    typeof candidate.careerCashAfter !== 'number' ||
+    !Number.isFinite(candidate.careerCashAfter) ||
+    typeof candidate.careerNetWorthAfter !== 'number' ||
+    !Number.isFinite(candidate.careerNetWorthAfter)
+  ) {
+    return undefined;
+  }
+
+  return {
+    sessionId: candidate.sessionId,
+    outcome: candidate.outcome as CareerSettlementReceipt['outcome'],
+    careerCashAfter: candidate.careerCashAfter,
+    careerNetWorthAfter: candidate.careerNetWorthAfter,
+    appliedAt: toFiniteNumber(candidate.appliedAt, Date.now()),
+  };
 };
 
 export const INITIAL_MARKET_RATES: CategoryMarketRates = {
@@ -133,6 +242,36 @@ export const generateRandomMarketRates = (gameCount: number): CategoryMarketRate
   };
 };
 
+const normalizeMarketRates = (raw: unknown): CategoryMarketRates | undefined => {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const candidate = raw as Partial<CategoryMarketRates>;
+  if (!candidate.rates || typeof candidate.rates !== 'object') return undefined;
+
+  const categories: ItemCategory[] = ['PAINTING', 'ANTIQUE', 'JEWELRY'];
+  const rates = {} as CategoryMarketRates['rates'];
+
+  for (const category of categories) {
+    const entry = (candidate.rates as Record<string, unknown>)[category];
+    if (!entry || typeof entry !== 'object') return undefined;
+    const rate = entry as { multiplier?: unknown; trend?: unknown; newsHeadline?: unknown };
+    if (typeof rate.multiplier !== 'number' || !Number.isFinite(rate.multiplier)) return undefined;
+    if (rate.trend !== 'PUMP' && rate.trend !== 'DUMP' && rate.trend !== 'STABLE') return undefined;
+
+    rates[category] = {
+      multiplier: Math.min(3.5, Math.max(0.4, rate.multiplier)),
+      trend: rate.trend,
+      newsHeadline: typeof rate.newsHeadline === 'string'
+        ? rate.newsHeadline
+        : INITIAL_MARKET_RATES.rates[category].newsHeadline,
+    };
+  }
+
+  return {
+    lastUpdatedGame: toNonNegativeInteger(candidate.lastUpdatedGame),
+    rates,
+  };
+};
+
 export interface RoomGatingStatus {
   tier: RoomTier;
   isUnlocked: boolean;
@@ -167,69 +306,135 @@ export const evaluateRoomGating = (
   };
 };
 
-export const loadProfileFromStorage = (abandonUnrecoverableSession = true): PersistentCareerProfile => {
-  if (typeof localStorage === 'undefined') return { ...INITIAL_CAREER_PROFILE };
+const backupRawProfile = (raw: string) => {
+  if (typeof localStorage === 'undefined') return;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_V2);
-    if (!raw) return { ...INITIAL_CAREER_PROFILE };
-
-    const parsed = JSON.parse(raw);
-    const cash = toFiniteNumber(parsed.careerCash, 5000);
-    const netWorth = toFiniteNumber(parsed.careerNetWorth, 5000);
-    const isBankrupt = Boolean(parsed.isBankrupt ?? checkIsBankrupt(cash, netWorth));
-    const validItemIds = new Set(MASTER_ITEMS.map((item) => item.id));
-    const parsedItemIds: unknown[] = Array.isArray(parsed.vaultItemIds) ? parsed.vaultItemIds : [];
-    const vaultItemIds: string[] = [...new Set<string>(parsedItemIds.filter(
-      (id: unknown): id is string => typeof id === 'string' && validItemIds.has(id)
-    ))];
-    if (vaultItemIds.length !== parsedItemIds.length) {
-      console.warn('[CareerStore] Unknown or duplicate vault item ids were ignored during migration.');
-    }
-
-    const baseProfile: PersistentCareerProfile = {
-      storageVersion: '2.3.1',
-      careerCash: cash,
-      careerNetWorth: netWorth,
-      vaultItemIds,
-      vaultItemStates: parsed.vaultItemStates || {},
-      unlockedAchievementIds: Array.isArray(parsed.unlockedAchievementIds) ? parsed.unlockedAchievementIds : [],
-      highestRoomTierUnlocked: parsed.highestRoomTierUnlocked || 'BRONZE',
-      blackVipTicketCount: toNonNegativeInteger(parsed.blackVipTicketCount),
-      totalGamesPlayed: toNonNegativeInteger(parsed.totalGamesPlayed),
-      totalWins: toNonNegativeInteger(parsed.totalWins),
-      isBankrupt,
-      bankruptcyCount: toNonNegativeInteger(parsed.bankruptcyCount),
-      lastUpdatedTimestamp: toFiniteNumber(parsed.lastUpdatedTimestamp, Date.now()),
-      lastSettlementReceipt: parsed.lastSettlementReceipt,
-      activeSession: !abandonUnrecoverableSession && parsed.activeSession?.status === 'ACTIVE'
-        ? parsed.activeSession
-        : undefined,
-    };
-
-    if (abandonUnrecoverableSession && parsed.activeSession?.status === 'ACTIVE' && typeof parsed.activeSession.sessionId === 'string') {
-      baseProfile.lastSettlementReceipt = {
-        sessionId: parsed.activeSession.sessionId,
-        outcome: 'ABANDONED',
-        careerCashAfter: cash,
-        careerNetWorthAfter: netWorth,
-        appliedAt: Date.now(),
-      };
-    }
-
-    localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(baseProfile));
-    return baseProfile;
+    localStorage.setItem(STORAGE_BACKUP_KEY, raw);
   } catch (e) {
-    console.warn('[CareerStore] Failed to load profile. Using initial.', e);
+    console.warn('[CareerStore] Failed to back up the corrupt profile.', e);
+  }
+};
+
+/**
+ * 저장 원문을 검증·정규화한다. 알 수 없는 값은 안전한 기본값으로 복구하며 예외를 던지지 않는다.
+ * JSON 파싱 실패만 호출자에서 손상 데이터로 처리한다.
+ */
+const parseStoredProfile = (
+  raw: string,
+  abandonUnrecoverableSession: boolean
+): PersistentCareerProfile => {
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid career profile shape');
+  }
+
+  const cash = toFiniteNumber(parsed.careerCash, INITIAL_CAREER_PROFILE.careerCash);
+  const storedNetWorth = toFiniteNumber(parsed.careerNetWorth, cash);
+  const vaultItemIds = normalizeVaultItemIds(parsed.vaultItemIds);
+  const vaultItemStates = normalizeVaultItemStates(parsed.vaultItemStates, vaultItemIds);
+  const unlockedAchievementIds = normalizeAchievementIds(parsed.unlockedAchievementIds);
+  const highestRoomTierUnlocked = isRoomTier(parsed.highestRoomTierUnlocked)
+    ? parsed.highestRoomTierUnlocked
+    : deriveHighestTier(storedNetWorth);
+  const marketRates = normalizeMarketRates(parsed.marketRates)
+    ?? generateRandomMarketRates(toNonNegativeInteger(parsed.totalGamesPlayed));
+  const activeSession = abandonUnrecoverableSession
+    ? undefined
+    : normalizeActiveSession(parsed.activeSession);
+  const isBankrupt = typeof parsed.isBankrupt === 'boolean'
+    ? parsed.isBankrupt
+    : checkIsBankrupt(cash, storedNetWorth);
+
+  const profile: PersistentCareerProfile = {
+    storageVersion: '2.3.1',
+    careerCash: cash,
+    careerNetWorth: storedNetWorth,
+    vaultItemIds,
+    vaultItemStates,
+    unlockedAchievementIds,
+    highestRoomTierUnlocked,
+    blackVipTicketCount: toNonNegativeInteger(parsed.blackVipTicketCount),
+    totalGamesPlayed: toNonNegativeInteger(parsed.totalGamesPlayed),
+    totalWins: toNonNegativeInteger(parsed.totalWins),
+    isBankrupt,
+    bankruptcyCount: toNonNegativeInteger(parsed.bankruptcyCount),
+    lastUpdatedTimestamp: toFiniteNumber(parsed.lastUpdatedTimestamp, Date.now()),
+    lastSettlementReceipt: normalizeSettlementReceipt(parsed.lastSettlementReceipt),
+    activeSession,
+    marketRates,
+  };
+
+  const abandonedSession = abandonUnrecoverableSession
+    ? normalizeActiveSession(parsed.activeSession)
+    : undefined;
+  if (abandonedSession) {
+    profile.lastSettlementReceipt = {
+      sessionId: abandonedSession.sessionId,
+      outcome: 'ABANDONED',
+      careerCashAfter: cash,
+      careerNetWorthAfter: storedNetWorth,
+      appliedAt: Date.now(),
+    };
+  }
+
+  return profile;
+};
+
+/** 저장소를 변경하지 않고 현재 저장 프로필을 읽는다. 다중 탭 진입 충돌 확인용. */
+export const readProfileFromStorage = (
+  abandonUnrecoverableSession = true
+): PersistentCareerProfile => {
+  if (typeof localStorage === 'undefined') return { ...INITIAL_CAREER_PROFILE };
+  const raw = localStorage.getItem(STORAGE_KEY_V2);
+  if (!raw) return { ...INITIAL_CAREER_PROFILE };
+  try {
+    return parseStoredProfile(raw, abandonUnrecoverableSession);
+  } catch (e) {
+    console.warn('[CareerStore] Stored profile is corrupt. Backup and initial profile will be used.', e);
+    backupRawProfile(raw);
     return { ...INITIAL_CAREER_PROFILE };
   }
 };
 
-const saveProfileToStorage = (profile: PersistentCareerProfile) => {
-  if (typeof localStorage === 'undefined') return;
+export const loadProfileFromStorage = (abandonUnrecoverableSession = true): PersistentCareerProfile => {
+  if (typeof localStorage === 'undefined') return { ...INITIAL_CAREER_PROFILE };
+  const raw = localStorage.getItem(STORAGE_KEY_V2);
+  if (!raw) return { ...INITIAL_CAREER_PROFILE };
+
+  let profile: PersistentCareerProfile;
+  try {
+    profile = parseStoredProfile(raw, abandonUnrecoverableSession);
+  } catch (e) {
+    console.warn('[CareerStore] Failed to parse profile. Backup and initial profile will be used.', e);
+    backupRawProfile(raw);
+    return { ...INITIAL_CAREER_PROFILE };
+  }
+
+  // setItem 실패가 유효 프로필을 초기값으로 대체하지 않도록 저장 실패는 경고만 남긴다.
   try {
     localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(profile));
   } catch (e) {
+    console.warn('[CareerStore] Loaded profile could not be normalized in storage.', e);
+  }
+  return profile;
+};
+
+export const saveProfileToStorage = (profile: PersistentCareerProfile): boolean => {
+  if (typeof localStorage === 'undefined') return true;
+  try {
+    const previousRaw = localStorage.getItem(STORAGE_KEY_V2);
+    if (previousRaw) {
+      try {
+        localStorage.setItem(STORAGE_BACKUP_KEY, previousRaw);
+      } catch {
+        // 백업 실패는 원본 저장을 막지 않는다.
+      }
+    }
+    localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(profile));
+    return true;
+  } catch (e) {
     console.error('[CareerStore] Failed to save profile to localStorage.', e);
+    return false;
   }
 };
 
@@ -243,11 +448,11 @@ const computeVaultTotalValue = (
     if (!master) return sum;
 
     const state = vaultStates[id];
+    const acquired = acquiredItems.find((item) => item.id === id);
     const condition = state?.condition || master.condition || 'PRISTINE';
-    const isJackpot = state?.isJackpot || false;
+    const isJackpot = state?.isJackpot ?? acquired?.isJackpot ?? master.isJackpot ?? false;
 
-    const ratio = isJackpot ? 2.0 : (RESTORATION_CONFIG.CONDITION_VALUE_RATIOS[condition] ?? 1.0);
-    return sum + Math.round(master.realValue * ratio);
+    return sum + Math.round(master.realValue * getItemConditionMultiplier(condition, isJackpot));
   }, 0);
 };
 
@@ -255,14 +460,16 @@ interface CareerStoreState {
   profile: PersistentCareerProfile;
   marketRates: CategoryMarketRates;
   lastPromotedTier: RoomTier | null;
+  persistenceError: string | null;
 
   // Actions
   enterRoom: (tier: RoomTier) => boolean;
   commitGameResult: (command: CareerSettlementCommand) => {
-    status: 'APPLIED' | 'ALREADY_APPLIED' | 'STALE_SESSION' | 'INVALID';
+    status: 'APPLIED' | 'ALREADY_APPLIED' | 'STALE_SESSION' | 'INVALID' | 'SAVE_FAILED';
     newNetWorth: number;
     promotedTier: RoomTier | null;
     isBankrupt: boolean;
+    newlyUnlockedAchievementIds: string[];
   };
   declareBankruptcy: () => void;
   unlockAchievements: (achievementIds: string[]) => void;
@@ -270,6 +477,7 @@ interface CareerStoreState {
   grantBlackVipTicket: (count?: number) => void;
   resetCareer: () => void;
   clearPromotionNotice: () => void;
+  clearPersistenceError: () => void;
 
   // v2.2.0 Systems
   rollNewMarketRates: () => CategoryMarketRates;
@@ -282,16 +490,28 @@ interface CareerStoreState {
   getGatingStatus: (tier: RoomTier) => RoomGatingStatus;
 }
 
+const bootstrapProfile = loadProfileFromStorage();
+
 export const useCareerStore = create<CareerStoreState>((set, get) => ({
-  profile: loadProfileFromStorage(),
-  marketRates: INITIAL_MARKET_RATES,
+  profile: bootstrapProfile,
+  marketRates: bootstrapProfile.marketRates ?? INITIAL_MARKET_RATES,
   lastPromotedTier: null,
+  persistenceError: null,
 
   enterRoom: (tier: RoomTier): boolean => {
     const { profile } = get();
     if (profile.activeSession) return false;
-    const gating = evaluateRoomGating(tier, profile);
 
+    // 다른 탭이 이미 활성 세션을 저장했다면 덮어쓰지 않는다. (다중 탭 명시적 미지원)
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY_V2)) {
+      const storedProfile = readProfileFromStorage(false);
+      if (storedProfile.activeSession) {
+        set({ persistenceError: '다른 탭에서 진행 중인 경매 세션이 있습니다. 한 탭에서만 플레이해 주세요.' });
+        return false;
+      }
+    }
+
+    const gating = evaluateRoomGating(tier, profile);
     if (!gating.isPlayable) {
       return false;
     }
@@ -325,19 +545,24 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       lastUpdatedTimestamp: Date.now()
     };
 
-    saveProfileToStorage(updatedProfile);
-    set({ profile: updatedProfile });
+    if (!saveProfileToStorage(updatedProfile)) {
+      set({ persistenceError: '입장 정보를 저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.' });
+      return false;
+    }
+
+    set({ profile: updatedProfile, persistenceError: null });
     return true;
   },
 
   commitGameResult: (command: CareerSettlementCommand) => {
-    const { profile, rollNewMarketRates } = get();
+    const { profile, marketRates } = get();
 
-    const fallbackResult = (status: 'ALREADY_APPLIED' | 'STALE_SESSION' | 'INVALID') => ({
+    const fallbackResult = (status: 'ALREADY_APPLIED' | 'STALE_SESSION' | 'INVALID' | 'SAVE_FAILED') => ({
       status,
       newNetWorth: profile.careerNetWorth,
       promotedTier: null,
       isBankrupt: profile.isBankrupt,
+      newlyUnlockedAchievementIds: [] as string[],
     });
 
     if (profile.lastSettlementReceipt?.sessionId === command.sessionId && !profile.activeSession) {
@@ -346,7 +571,11 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
     if (!profile.activeSession || profile.activeSession.sessionId !== command.sessionId) {
       return fallbackResult('STALE_SESSION');
     }
-    if (!Number.isFinite(command.endingCash) || !Array.isArray(command.acquiredItems)) {
+    if (
+      !Number.isFinite(command.endingCash) ||
+      !Array.isArray(command.acquiredItems) ||
+      !['NORMAL', 'ESCAPED', 'ARRESTED', 'ABANDONED'].includes(command.outcome)
+    ) {
       return fallbackResult('INVALID');
     }
 
@@ -356,19 +585,18 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       : command.acquiredItems;
     const isWinner = command.outcome === 'NORMAL' && command.isWinner;
 
-    // 2. 신규 획득 유물 ID 누적 & 초기 상태 등록
+    // 신규 획득 유물 ID 누적 & 초기 상태 등록 (잭팟 상태 보존)
     const currentVaultSet = new Set(profile.vaultItemIds);
-    const validItemIds = new Set(MASTER_ITEMS.map((item) => item.id));
     const updatedStates = { ...(profile.vaultItemStates || {}) };
 
     acquiredItems.forEach((item) => {
       // 위작이 아닌 진품만 영구 보관함에 가치 보존
-      if (!item.isFake && validItemIds.has(item.id)) {
+      if (!item.isFake && VALID_ITEM_IDS.has(item.id)) {
         currentVaultSet.add(item.id);
         if (!updatedStates[item.id]) {
           updatedStates[item.id] = {
-            condition: item.condition || 'PRISTINE',
-            isJackpot: false
+            condition: isItemCondition(item.condition) ? item.condition : 'PRISTINE',
+            isJackpot: item.isJackpot === true,
           };
         }
       }
@@ -384,25 +612,11 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       newCash = applyEndGameCashCurse(newCash, getOwnedCurseCodes(profile.vaultItemIds, acquiredItems));
     }
 
-    // 3. 소장 유물 실제 가치 총합 계산 (상태 및 잭팟 계수 반영)
     const vaultTotalValue = computeVaultTotalValue(updatedVaultItemIds, updatedStates, acquiredItems);
-
-    // 4. 총 순자산 (가용 현금 + 보관함 유물 가치)
     const newNetWorth = newCash + vaultTotalValue;
-
-    // 5. 파산 여부 엄격 판정
     const isBankrupt = checkIsBankrupt(newCash, newNetWorth);
 
-    // 6. 룸 티어 승급/강등 판정
-    let calculatedHighestTier: RoomTier = 'BRONZE';
-    if (newNetWorth >= ROOM_TIERS_MASTER.DIAMOND.minNetWorthRequired) {
-      calculatedHighestTier = 'DIAMOND';
-    } else if (newNetWorth >= ROOM_TIERS_MASTER.GOLD.minNetWorthRequired) {
-      calculatedHighestTier = 'GOLD';
-    } else if (newNetWorth >= ROOM_TIERS_MASTER.SILVER.minNetWorthRequired) {
-      calculatedHighestTier = 'SILVER';
-    }
-
+    const calculatedHighestTier = deriveHighestTier(newNetWorth);
     const prevTierIndex = ROOM_TIER_ORDER.indexOf(profile.highestRoomTierUnlocked);
     const newTierIndex = ROOM_TIER_ORDER.indexOf(calculatedHighestTier);
 
@@ -411,28 +625,32 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       promotedTier = calculatedHighestTier;
     }
 
-    // 7. 암시장 VIP 티켓 보상: 골드/다이아 정상 완주 및 blind-master 최초 해금
+    // 암시장 VIP 티켓 보상: 골드/다이아 정상 완주 및 blind-master 최초 해금
     let updatedTickets = profile.blackVipTicketCount || 0;
     if (command.outcome === 'NORMAL' && (profile.activeSession.tier === 'GOLD' || profile.activeSession.tier === 'DIAMOND')) {
       updatedTickets += 1;
     }
 
-    // 8. 업적 자동 점검
+    // 업적 자동 점검
+    const previousAchievements = new Set(profile.unlockedAchievementIds);
     const currentAchSet = new Set(profile.unlockedAchievementIds);
     const hadBlindMaster = currentAchSet.has('ach-blind-master');
-    if (commitsSessionProgress) {
-      command.unlockedAchievementIds.forEach((id) => currentAchSet.add(id));
+    if (commitsSessionProgress && Array.isArray(command.unlockedAchievementIds)) {
+      command.unlockedAchievementIds.forEach((id) => {
+        if (VALID_ACHIEVEMENT_IDS.has(id)) currentAchSet.add(id);
+      });
     }
     if (isWinner) currentAchSet.add('ach-first-win');
-    if (acquiredItems.some((i) => i.isFake === false && i.isAppraised)) {
-      currentAchSet.add('ach-forgery-hunter');
+    // QD-17: 설명과 동일하게 '손실 없이 순자산 $25,000 이상'일 때만 부여한다.
+    if (newNetWorth >= 25_000 && newNetWorth >= profile.careerNetWorth) {
+      currentAchSet.add('ach-iron-vault');
     }
-    if (newNetWorth >= 100000) currentAchSet.add('ach-iron-vault');
     if (updatedVaultItemIds.length >= 12) currentAchSet.add('ach-museum-complete');
     if (command.outcome === 'NORMAL' && !hadBlindMaster && currentAchSet.has('ach-blind-master')) {
       updatedTickets += 1;
     }
 
+    const newlyUnlockedAchievementIds = [...currentAchSet].filter((id) => !previousAchievements.has(id));
     const appliedAt = Date.now();
     const receipt: CareerSettlementReceipt = {
       sessionId: command.sessionId,
@@ -441,6 +659,10 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       careerNetWorthAfter: newNetWorth,
       appliedAt,
     };
+
+    const nextMarketRates = commitsSessionProgress
+      ? generateRandomMarketRates(profile.totalGamesPlayed + 1)
+      : (profile.marketRates ?? marketRates);
 
     const updatedProfile: PersistentCareerProfile = {
       ...profile,
@@ -456,34 +678,59 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       isBankrupt,
       activeSession: undefined,
       lastSettlementReceipt: receipt,
+      marketRates: nextMarketRates,
       lastUpdatedTimestamp: appliedAt,
     };
 
-    saveProfileToStorage(updatedProfile);
+    if (!saveProfileToStorage(updatedProfile)) {
+      set({ persistenceError: '경매 결과를 저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.' });
+      return fallbackResult('SAVE_FAILED');
+    }
 
-    // 새 게임 종료 시 카테고리 극심 시세 변동 롤링
-    if (commitsSessionProgress) rollNewMarketRates();
+    set({
+      profile: updatedProfile,
+      marketRates: nextMarketRates,
+      lastPromotedTier: promotedTier,
+      persistenceError: null,
+    });
 
-    set({ profile: updatedProfile, lastPromotedTier: promotedTier });
-
-    return { status: 'APPLIED' as const, newNetWorth, promotedTier, isBankrupt };
+    return {
+      status: 'APPLIED' as const,
+      newNetWorth,
+      promotedTier,
+      isBankrupt,
+      newlyUnlockedAchievementIds,
+    };
   },
 
   grantBlackVipTicket: (count = 1) => {
     const { profile } = get();
+    const granted = Math.max(0, Math.floor(Number(count) || 0));
     const updated = {
       ...profile,
-      blackVipTicketCount: (profile.blackVipTicketCount || 0) + count,
+      blackVipTicketCount: (profile.blackVipTicketCount || 0) + granted,
       lastUpdatedTimestamp: Date.now()
     };
-    saveProfileToStorage(updated);
-    set({ profile: updated });
+    if (!saveProfileToStorage(updated)) {
+      set({ persistenceError: 'VIP 티켓을 저장하지 못했습니다.' });
+      return;
+    }
+    set({ profile: updated, persistenceError: null });
   },
 
   rollNewMarketRates: (): CategoryMarketRates => {
     const { profile } = get();
     const newRates = generateRandomMarketRates(profile.totalGamesPlayed + 1);
-    set({ marketRates: newRates });
+    const updatedProfile = {
+      ...profile,
+      marketRates: newRates,
+      lastUpdatedTimestamp: Date.now(),
+    };
+    if (saveProfileToStorage(updatedProfile)) {
+      set({ profile: updatedProfile, marketRates: newRates, persistenceError: null });
+    } else {
+      set({ persistenceError: '시장 시세를 저장하지 못했습니다.' });
+    }
     return newRates;
   },
 
@@ -555,8 +802,11 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       lastUpdatedTimestamp: Date.now()
     };
 
-    saveProfileToStorage(updatedProfile);
-    set({ profile: updatedProfile });
+    if (!saveProfileToStorage(updatedProfile)) {
+      set({ persistenceError: '복원 결과를 저장하지 못했습니다. 다시 시도해 주세요.' });
+      throw new Error('Failed to persist restoration result');
+    }
+    set({ profile: updatedProfile, persistenceError: null });
 
     return {
       outcome,
@@ -579,18 +829,13 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
     }
 
     const itemState = profile.vaultItemStates?.[itemId];
-    const condition = itemState?.condition || item.condition || 'PRISTINE';
-    const isJackpot = itemState?.isJackpot || false;
-
-    const conditionMultiplier = isJackpot ? 2.0 : (RESTORATION_CONFIG.CONDITION_VALUE_RATIOS[condition] ?? 1.0);
-    const categoryMarket = marketRates.rates[item.category];
-    const baseMarketRate = categoryMarket?.multiplier ?? 1.0;
-    const marketRate = categoryMarket?.trend === 'DUMP'
-      ? applyDumpLossCurse(baseMarketRate, getOwnedCurseCodes(profile.vaultItemIds))
-      : baseMarketRate;
-
-    // 최종 위탁 판매 수령액
-    const payout = Math.round(item.realValue * conditionMultiplier * marketRate);
+    // UI 미리보기와 동일한 단일 계산 함수를 사용한다. (보존 배수 이중 적용 금지)
+    const payout = calculateConsignmentPayout(
+      item,
+      itemState,
+      marketRates,
+      getOwnedCurseCodes(profile.vaultItemIds)
+    );
 
     // 보관함에서 제거
     const updatedVaultItemIds = profile.vaultItemIds.filter((id) => id !== itemId);
@@ -610,8 +855,11 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       lastUpdatedTimestamp: Date.now()
     };
 
-    saveProfileToStorage(updatedProfile);
-    set({ profile: updatedProfile });
+    if (!saveProfileToStorage(updatedProfile)) {
+      set({ persistenceError: '위탁 판매 결과를 저장하지 못했습니다. 다시 시도해 주세요.' });
+      throw new Error('Failed to persist consignment sale');
+    }
+    set({ profile: updatedProfile, persistenceError: null });
 
     return {
       soldItem: { ...item, realValue: payout },
@@ -635,14 +883,19 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       lastUpdatedTimestamp: Date.now()
     };
 
-    saveProfileToStorage(recoveredProfile);
-    set({ profile: recoveredProfile, lastPromotedTier: null });
+    if (!saveProfileToStorage(recoveredProfile)) {
+      set({ persistenceError: '파산 구제 결과를 저장하지 못했습니다. 다시 시도해 주세요.' });
+      return;
+    }
+    set({ profile: recoveredProfile, lastPromotedTier: null, persistenceError: null });
   },
 
   unlockAchievements: (achievementIds: string[]) => {
     const { profile } = get();
     const achSet = new Set(profile.unlockedAchievementIds);
-    achievementIds.forEach((id) => achSet.add(id));
+    achievementIds.forEach((id) => {
+      if (VALID_ACHIEVEMENT_IDS.has(id)) achSet.add(id);
+    });
 
     const updatedProfile: PersistentCareerProfile = {
       ...profile,
@@ -650,17 +903,19 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       lastUpdatedTimestamp: Date.now()
     };
 
-    saveProfileToStorage(updatedProfile);
-    set({ profile: updatedProfile });
+    if (!saveProfileToStorage(updatedProfile)) {
+      set({ persistenceError: '업적을 저장하지 못했습니다.' });
+      return;
+    }
+    set({ profile: updatedProfile, persistenceError: null });
   },
 
   unlockItems: (itemIds: string[]) => {
     const { profile } = get();
-    const validIds = new Set(MASTER_ITEMS.map((item) => item.id));
     const vaultSet = new Set(profile.vaultItemIds);
     const newUnlocked: string[] = [];
     itemIds.forEach((id) => {
-      if (validIds.has(id) && !vaultSet.has(id)) {
+      if (VALID_ITEM_IDS.has(id) && !vaultSet.has(id)) {
         vaultSet.add(id);
         newUnlocked.push(id);
       }
@@ -672,19 +927,38 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
       vaultItemIds: [...vaultSet],
       lastUpdatedTimestamp: Date.now(),
     };
-    saveProfileToStorage(updatedProfile);
-    set({ profile: updatedProfile });
+    if (!saveProfileToStorage(updatedProfile)) {
+      set({ persistenceError: '도감 해금을 저장하지 못했습니다.' });
+      return [];
+    }
+    set({ profile: updatedProfile, persistenceError: null });
     return newUnlocked;
   },
 
   resetCareer: () => {
-    const resetProfile = { ...INITIAL_CAREER_PROFILE, lastUpdatedTimestamp: Date.now() };
-    saveProfileToStorage(resetProfile);
-    set({ profile: resetProfile, lastPromotedTier: null });
+    const resetProfile = {
+      ...INITIAL_CAREER_PROFILE,
+      marketRates: INITIAL_MARKET_RATES,
+      lastUpdatedTimestamp: Date.now(),
+    };
+    if (!saveProfileToStorage(resetProfile)) {
+      set({ persistenceError: '커리어 초기화를 저장하지 못했습니다.' });
+      return;
+    }
+    set({
+      profile: resetProfile,
+      marketRates: INITIAL_MARKET_RATES,
+      lastPromotedTier: null,
+      persistenceError: null,
+    });
   },
 
   clearPromotionNotice: () => {
     set({ lastPromotedTier: null });
+  },
+
+  clearPersistenceError: () => {
+    set({ persistenceError: null });
   },
 
   getHydratedVaultItems: (): Item[] => {
@@ -693,8 +967,8 @@ export const useCareerStore = create<CareerStoreState>((set, get) => ({
     return MASTER_ITEMS.filter((item) => vaultSet.has(item.id)).map((item) => {
       const state = profile.vaultItemStates?.[item.id];
       const condition = state?.condition || item.condition || 'PRISTINE';
-      const isJackpot = state?.isJackpot || false;
-      const ratio = isJackpot ? 2.0 : (RESTORATION_CONFIG.CONDITION_VALUE_RATIOS[condition] ?? 1.0);
+      const isJackpot = state?.isJackpot ?? item.isJackpot ?? false;
+      const ratio = getItemConditionMultiplier(condition, isJackpot);
 
       return {
         ...item,

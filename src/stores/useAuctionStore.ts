@@ -1,3 +1,4 @@
+import { assetUrl } from '../services/assetService';
 import { create } from 'zustand';
 import {
   AuctionFSMState,
@@ -14,9 +15,8 @@ import {
 } from '../types';
 import { createTierItemQueue } from '../data/masterItems';
 import { MASTER_EVENTS } from '../data/masterEvents';
-import { MASTER_SYNERGIES } from '../data/masterSynergies';
 import { generateRandomChanceCards } from '../data/chanceCards';
-import { APPRAISAL_CONFIG, BLACK_MARKET_CONFIG, LOAN_CONFIG, TIMER_CONFIG } from '../data/constants';
+import { BLACK_MARKET_CONFIG, LOAN_CONFIG, TIMER_CONFIG } from '../data/constants';
 import { AudioService } from '../services/audioService';
 import { AiBotService } from '../services/aiBotService';
 import { DutchTickEngine } from '../services/dutchTickEngine';
@@ -27,6 +27,12 @@ import {
   getOwnedCurseCodes,
   getPoliceRaidChance,
 } from '../services/contrabandService';
+import {
+  calculateSynergyBonus,
+  getAdjustedItemValue,
+  getAppraisalCost,
+  getSessionItemValue,
+} from '../services/itemValueService';
 
 interface AppraisalBriefing {
   itemName: string;
@@ -56,6 +62,7 @@ interface AuctionStoreState {
   currentHighestBid: number;
   highestBidder: Player | null;
   timeLeft: number;
+  timerDeadline: number | null; // QD-25: 백그라운드 탭에서도 실제 경과 시간으로 보정
   accumulatedIncrement: number; // 스택형 호가 추가 누적액
   baseIncrement: number;
 
@@ -74,6 +81,7 @@ interface AuctionStoreState {
   isAppraisalModalOpen: boolean;
   isMagnifierActive: boolean;
   isInsuranceActive: boolean;
+  isSpeedHammerActive: boolean;
   insuranceRefundAmount: number | null;
 
   // 경찰 급습 (Police Raid) 상태 & 모달
@@ -173,6 +181,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
     currentHighestBid: 0,
     highestBidder: null,
     timeLeft: TIMER_CONFIG.ENGLISH_AUCTION_DURATION,
+    timerDeadline: null,
     accumulatedIncrement: 0,
     baseIncrement: 500,
 
@@ -189,6 +198,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
     isAppraisalModalOpen: false,
     isMagnifierActive: false,
     isInsuranceActive: false,
+    isSpeedHammerActive: false,
     insuranceRefundAmount: null,
     settlementSummary: null,
 
@@ -217,7 +227,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         id: 'player_user',
         name: '나 (컬렉터)',
         isHuman: true,
-        avatar: '/assets/images/avatars/avatar_user.webp',
+        avatar: assetUrl('/assets/images/avatars/avatar_user.webp'),
         cash: careerProfile.activeSession.sessionCashStart,
         inventory: [],
         chanceCards: generateRandomChanceCards(),
@@ -244,6 +254,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         currentHighestBid: firstItem ? firstItem.startingBid : 0,
         highestBidder: null,
         timeLeft: TIMER_CONFIG.ENGLISH_AUCTION_DURATION,
+        timerDeadline: null,
         accumulatedIncrement: 0,
         baseIncrement: Math.max(100, Math.round((firstItem?.startingBid || 1000) * 0.1)),
         dutchState: firstItem
@@ -271,6 +282,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         isAppraisalModalOpen: false,
         isMagnifierActive: false,
         isInsuranceActive: false,
+        isSpeedHammerActive: false,
         insuranceRefundAmount: null,
         policeRaidState: createPoliceRaidState(firstItem),
         isPoliceRaidModalOpen: false,
@@ -300,10 +312,11 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
      * 잉글리시 호가 경매 입찰 실행
      */
     placeBid: (playerId, amount) => {
-      const { players, currentHighestBid, fsmState, timeLeft, policeRaidState } = get();
+      const { players, currentHighestBid, fsmState, timeLeft, policeRaidState, isSpeedHammerActive } = get();
       if (fsmState !== 'BIDDING_ACTIVE') return false;
       if (policeRaidState.status === 'RAIDED') return false;
-      if (amount <= currentHighestBid) return false;
+      // QD-15: NaN·Infinity·음수·소수 호가를 거부한다.
+      if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= currentHighestBid) return false;
 
       const bidder = players.find((p) => p.id === playerId);
       if (!bidder || bidder.cash < amount) return false;
@@ -313,6 +326,11 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
       if (timeLeft <= TIMER_CONFIG.ANTI_SNIPING_TRIGGER_TIME) {
         newTimeLeft = TIMER_CONFIG.ANTI_SNIPING_RESET;
       }
+      // QD-24: 스피드 해머는 본인 입찰 시점에 타이머를 2초로 강제 단축한다.
+      if (bidder.isHuman && isSpeedHammerActive) {
+        newTimeLeft = Math.min(newTimeLeft, TIMER_CONFIG.SPEED_HAMMER_DURATION);
+      }
+      const newDeadline = Date.now() + newTimeLeft * 1000;
 
       AudioService.playBidBell();
 
@@ -323,7 +341,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
             lastBidAmount: amount,
             lastDialogue: p.isHuman
               ? undefined
-              : (p.dialogues?.bidPlaced?.[Math.floor(Math.random() * (p.dialogues.bidPlaced.length || 1))] || '한 번 더 올린다!'),
+              : (p.dialogues?.bidPlaced?.[Math.floor(Math.random() * (p.dialogues.bidPlaced?.length || 1))] || '한 번 더 올린다!'),
           };
         }
         return p;
@@ -334,6 +352,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         currentHighestBid: amount,
         highestBidder: bidder,
         timeLeft: newTimeLeft,
+        timerDeadline: newDeadline,
         accumulatedIncrement: 0,
       });
 
@@ -344,16 +363,26 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
      * 감정사 의뢰 ($500 지불 후 진품/위작 정밀 브리핑)
      */
     requestAppraisal: () => {
-      const { currentItem, players } = get();
+      const state = get();
+      const { currentItem, players } = state;
       const user = players.find((p) => p.isHuman);
-      if (!user || !currentItem || user.cash < APPRAISAL_CONFIG.COST || currentItem.isAppraised) {
+      const appraisalCost = getAppraisalCost(currentItem);
+      // QD-03: 최고 입찰자라면 낙찰 예약액을 제외한 가용 현금으로만 지출을 허용한다.
+      const committedBid = state.fsmState === 'BIDDING_ACTIVE' && state.highestBidder?.id === user?.id
+        ? state.currentHighestBid
+        : 0;
+      const canSpendInState = state.fsmState === 'ROUND_INTRO'
+        || state.fsmState === 'BIDDING_ACTIVE'
+        || state.fsmState === 'SEALED_BID_ACTIVE'
+        || state.fsmState === 'DUTCH_DROPPING';
+      if (!user || !currentItem || !canSpendInState || user.cash - committedBid < appraisalCost || currentItem.isAppraised) {
         return false;
       }
 
       AudioService.playCardUse();
 
       const updatedPlayers = players.map((p) =>
-        p.isHuman ? { ...p, cash: p.cash - APPRAISAL_CONFIG.COST } : p
+        p.isHuman ? { ...p, cash: p.cash - appraisalCost } : p
       );
 
       const updatedItem: Item = {
@@ -414,12 +443,19 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
      * 찬스 카드 사용 (돋보기, 스피드해머, 안심보험)
      */
     useChanceCard: (cardId) => {
-      const { players, currentItem } = get();
+      const { players, currentItem, fsmState } = get();
       const user = players.find((p) => p.isHuman);
       if (!user) return false;
 
       const card = user.chanceCards.find((c) => c.id === cardId && !c.isUsed);
       if (!card) return false;
+      const canUseCardInState = fsmState === 'ROUND_INTRO'
+        || fsmState === 'BIDDING_ACTIVE'
+        || fsmState === 'SEALED_BID_ACTIVE'
+        || fsmState === 'DUTCH_DROPPING';
+      if (!canUseCardInState) return false;
+      // 스피드 해머는 실제 입찰이 가능한 잉글리시 진행 중에만 사용한다.
+      if (card.type === 'SPEED_HAMMER' && fsmState !== 'BIDDING_ACTIVE') return false;
 
       AudioService.playCardUse();
 
@@ -457,9 +493,12 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
           });
         }
       } else if (card.type === 'SPEED_HAMMER') {
+        const nextTimeLeft = Math.min(get().timeLeft, TIMER_CONFIG.SPEED_HAMMER_DURATION);
         set({
           players: updatedPlayers,
-          timeLeft: Math.min(get().timeLeft, TIMER_CONFIG.SPEED_HAMMER_DURATION),
+          isSpeedHammerActive: true,
+          timeLeft: nextTimeLeft,
+          timerDeadline: Date.now() + nextTimeLeft * 1000,
         });
       } else if (card.type === 'INSURANCE') {
         set({
@@ -580,10 +619,12 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
 
       tickEngine.stop();
       set({ policeRaidState: { ...policeRaidState, isActive: false, status: 'RESOLVING' } });
+      // DEC-009: 탈출도 NORMAL과 같은 긴급 대출 상환 순서를 적용한다.
+      const loanRepayment = user.hasTakenLoan ? user.loanRepaymentAmount : 0;
       const result = useCareerStore.getState().commitGameResult({
         sessionId: session.sessionId,
         outcome: 'ESCAPED',
-        endingCash: user.cash,
+        endingCash: user.cash - loanRepayment,
         acquiredItems: user.inventory,
         isWinner: false,
         unlockedAchievementIds: [],
@@ -594,6 +635,8 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
           isPoliceRaidModalOpen: false,
           currentView: 'LOBBY',
           fsmState: 'IDLE',
+          timerDeadline: null,
+          isSpeedHammerActive: false,
         });
       } else {
         set({ policeRaidState });
@@ -642,6 +685,8 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
           isPoliceRaidModalOpen: false,
           currentView: 'LOBBY',
           fsmState: 'IDLE',
+          timerDeadline: null,
+          isSpeedHammerActive: false,
         });
       } else {
         set({ policeRaidState });
@@ -867,9 +912,12 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         currentHighestBid: item ? item.startingBid : 0,
         highestBidder: null,
         timeLeft: isRound4 ? TIMER_CONFIG.SEALED_BID_DURATION : TIMER_CONFIG.ENGLISH_AUCTION_DURATION,
+        timerDeadline: null,
         accumulatedIncrement: 0,
+        baseIncrement: Math.max(100, Math.round((item?.startingBid || 1000) * 0.1)),
         isMagnifierActive: false,
         isInsuranceActive: false,
+        isSpeedHammerActive: false,
         insuranceRefundAmount: null,
         sealedBids: [],
         sealedBidResolution: null,
@@ -926,8 +974,12 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         return;
       }
       const isRound4 = currentRound === 4;
+      const duration = isRound4 ? TIMER_CONFIG.SEALED_BID_DURATION : TIMER_CONFIG.ENGLISH_AUCTION_DURATION;
       set({
         fsmState: isRound4 ? 'SEALED_BID_ACTIVE' : 'BIDDING_ACTIVE',
+        timeLeft: duration,
+        timerDeadline: Date.now() + duration * 1000,
+        isSpeedHammerActive: false,
         sealedBidResolution: isRound4
           ? {
               roundResolutionId: createRuntimeId(`sealed-round-${currentRound}`),
@@ -943,21 +995,30 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
      * 타이머 1초 틱 (잉글리시 & 비밀 경매 전용)
      */
     tickTimer: () => {
-      const { timeLeft, fsmState, policeRaidState } = get();
+      const { timeLeft, timerDeadline, fsmState, policeRaidState } = get();
       if (policeRaidState.status === 'RAIDED') return;
       if (fsmState !== 'BIDDING_ACTIVE' && fsmState !== 'SEALED_BID_ACTIVE') return;
 
-      if (timeLeft <= 4 && timeLeft > 1) {
-        AudioService.playBGM('CLIMAX');
-      }
+      // QD-25: 탭이 백그라운드로 밀려 인터벌이 지연되어도 deadline 기준으로 남은 시간을 보정한다.
+      const deadlineRemaining = timerDeadline
+        ? Math.max(0, Math.ceil((timerDeadline - Date.now()) / 1000))
+        : timeLeft;
+      const nextTimeLeft = Math.min(timeLeft - 1, deadlineRemaining);
 
-      if (timeLeft > 1) {
-        AudioService.playTick(timeLeft <= 3);
-        set({ timeLeft: timeLeft - 1 });
+      if (nextTimeLeft > 0) {
+        if (nextTimeLeft <= 4 && nextTimeLeft > 1) {
+          AudioService.playBGM('CLIMAX');
+        }
+        AudioService.playTick(nextTimeLeft <= 3);
+        set({ timeLeft: nextTimeLeft });
         if (fsmState === 'BIDDING_ACTIVE') {
           get().triggerBotBidsTick();
         }
       } else {
+        set({ timeLeft: 0, timerDeadline: null });
+        if (timeLeft <= 4 && timeLeft > 1) {
+          AudioService.playBGM('CLIMAX');
+        }
         // 시간 만료: 4R 비밀 경매 시 유저 자동 0원(Fold) 처리 후 봇 입찰가 즉시 오픈
         if (fsmState === 'SEALED_BID_ACTIVE') {
           const { currentItem, players } = get();
@@ -1033,7 +1094,8 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
       if (highestBidder && currentItem) {
         let refund = 0;
         if (highestBidder.isHuman && isInsuranceActive) {
-          const loss = Math.max(0, currentHighestBid - currentItem.realValue);
+          // 보험 손실액도 보존 상태가 반영된 조정 가치를 기준으로 계산한다. (DEC-011)
+          const loss = Math.max(0, currentHighestBid - getAdjustedItemValue(currentItem));
           if (loss > 0) {
             refund = loss;
           }
@@ -1096,7 +1158,9 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
      * 다음 라운드로 진행
      */
     nextRound: () => {
-      const { currentRound, totalRounds } = get();
+      const { currentRound, totalRounds, fsmState } = get();
+      // QD-26: 결과 공개 상태에서만 진행해 중복 클릭으로 라운드를 건너뛰지 않게 한다.
+      if (fsmState !== 'ROUND_REVEAL' && fsmState !== 'ROUND_PASSED') return;
       if (currentRound >= totalRounds) {
         get().finishGame();
       } else {
@@ -1111,32 +1175,20 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
     finishGame: () => {
       const { players, activeMarketEvent, fsmState, earnedAchievementIds } = get();
       if (fsmState === 'GAME_OVER') return;
-      const activeSession = useCareerStore.getState().profile.activeSession;
+      const previousProfile = useCareerStore.getState().profile;
+      const activeSession = previousProfile.activeSession;
       if (!activeSession) return;
       AudioService.playBGM('VICTORY');
 
       const rankings = players
         .map((p) => {
-          let inventoryVal = 0;
-          p.inventory.forEach((item) => {
-            let val = item.isFake ? 0 : item.realValue;
-            if (activeMarketEvent && activeMarketEvent.effectType === 'CATEGORY_MULTIPLIER' && activeMarketEvent.targetCategory === item.category) {
-              val = Math.floor(val * (activeMarketEvent.multiplier || 1.5));
-            }
-            inventoryVal += val;
-          });
-
-          let synergyBonus = 0;
-          const myItemIds = new Set(p.inventory.map((i) => i.id));
-          MASTER_SYNERGIES.forEach((syn) => {
-            const hasAll = syn.requiredItemIds.every((id) => myItemIds.has(id));
-            if (hasAll) {
-              const setItemValue = p.inventory
-                .filter((i) => syn.requiredItemIds.includes(i.id))
-                .reduce((sum, i) => sum + i.realValue, 0);
-              synergyBonus += Math.floor(setItemValue * syn.bonusMultiplier);
-            }
-          });
+          // DEC-011: 보존 상태·잭팟·시장 이벤트를 반영한 단일 평가 계약
+          const inventoryVal = p.inventory.reduce(
+            (sum, item) => sum + getSessionItemValue(item, activeMarketEvent),
+            0
+          );
+          // 위작은 시너지 세트 조건과 보너스에서 제외한다. (QD-30)
+          const synergyBonus = calculateSynergyBonus(p.inventory, activeMarketEvent);
 
           const loanDeduction = p.hasTakenLoan ? p.loanRepaymentAmount : 0;
           const finalNetWorth = p.cash + inventoryVal + synergyBonus - loanDeduction;
@@ -1157,7 +1209,6 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
       const userEntry = rankings.find((r) => r.player.isHuman);
       const userWon = userEntry?.rank === 1;
       const userAcquiredItems = userEntry?.player.inventory || [];
-      const userAcquiredItemIds = userAcquiredItems.filter((item) => !item.isFake).map((i) => i.id);
 
       // 업적 달성 검사
       const unlockedAchievements: string[] = [...earnedAchievementIds];
@@ -1167,6 +1218,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
           if (!unlockedAchievements.includes('ach-leverage-king')) unlockedAchievements.push('ach-leverage-king');
         }
       }
+      // QD-18: 진품만 낙찰받아 '승리'한 경우에만 베테랑 감정사 업적을 부여한다.
       if (userWon && userAcquiredItems.length > 0 && userAcquiredItems.every((i) => !i.isFake)) {
         if (!unlockedAchievements.includes('ach-forgery-hunter')) unlockedAchievements.push('ach-forgery-hunter');
       }
@@ -1183,14 +1235,20 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
       if (settlement.status !== 'APPLIED' && settlement.status !== 'ALREADY_APPLIED') return;
       const { promotedTier } = settlement;
 
+      // QD-19: 결과 화면에는 이번 정산에서 실제로 새로 해금된 항목만 표시한다.
+      const committedProfile = useCareerStore.getState().profile;
+      const previousItemIds = new Set(previousProfile.vaultItemIds);
+      const newlyUnlockedItemIds = committedProfile.vaultItemIds.filter((id) => !previousItemIds.has(id));
+      const newlyUnlockedAchievementIds = settlement.newlyUnlockedAchievementIds;
+
       set({
         fsmState: 'GAME_OVER',
         currentView: 'GALLERY',
         settlementSummary: {
           playerRankings: rankings,
           userEarnedTitles: userWon ? ['소더비 그랜드 챔피언', '황금의 손'] : ['명예 수집가'],
-          newlyUnlockedItemIds: userAcquiredItemIds,
-          newlyUnlockedAchievementIds: unlockedAchievements,
+          newlyUnlockedItemIds,
+          newlyUnlockedAchievementIds,
           promotedTier,
         },
       });
@@ -1200,7 +1258,7 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
       get().tickEngine.stop();
       const profile = useCareerStore.getState().profile;
       if (profile.activeSession) {
-        useCareerStore.getState().commitGameResult({
+        const settlement = useCareerStore.getState().commitGameResult({
           sessionId: profile.activeSession.sessionId,
           outcome: 'ABANDONED',
           endingCash: profile.careerCash,
@@ -1208,6 +1266,8 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
           isWinner: false,
           unlockedAchievementIds: [],
         });
+        // 저장 실패 시 세션을 잃지 않도록 로비 전환을 보류한다. (QD-02)
+        if (settlement.status === 'SAVE_FAILED') return;
       }
       AudioService.playBGM('LOBBY');
       set({
@@ -1217,11 +1277,13 @@ export const useAuctionStore = create<AuctionStoreState>((set, get) => {
         currentItem: null,
         highestBidder: null,
         currentHighestBid: 0,
+        timerDeadline: null,
         settlementSummary: null,
         isSealedBidModalOpen: false,
         sealedBidResolution: null,
         isMarketEventModalOpen: false,
         isAppraisalModalOpen: false,
+        isSpeedHammerActive: false,
         dutchState: { ...defaultDutchState },
         policeRaidState: createPoliceRaidState(),
         isPoliceRaidModalOpen: false,

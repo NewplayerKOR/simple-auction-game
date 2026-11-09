@@ -14,9 +14,12 @@ class SoundEngine {
   private masterGain: GainNode | null = null;
   private bgmGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
+  private visibilityAttached: boolean = false;
+  private hiddenBgm: BgmType = 'NONE';
 
   private initContext() {
     if (typeof window === 'undefined') return;
+    this.attachVisibilityHandler();
     if (!this.ctx) {
       const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioContextClass) {
@@ -64,11 +67,43 @@ class SoundEngine {
   public getSfxVolume() { return this.sfxVolume; }
   public getBgmVolume() { return this.bgmVolume; }
 
+  /**
+   * QD-46: 탭이 숨겨지면 BGM 타이머와 AudioContext를 멈추고,
+   * 다시 보이면 숨기기 전 BGM만 재개한다. SFX는 사용자 조작 없이 재생하지 않는다.
+   */
+  private handleVisibilityChange = () => {
+    if (typeof document === 'undefined' || !this.ctx) return;
+
+    if (document.hidden) {
+      if (this.currentBgm !== 'NONE') this.hiddenBgm = this.currentBgm;
+      this.stopBGM();
+      void this.ctx.suspend().catch(() => undefined);
+      return;
+    }
+
+    void this.ctx.resume().catch(() => undefined);
+    if (this.hiddenBgm !== 'NONE') {
+      const resumeType = this.hiddenBgm;
+      this.hiddenBgm = 'NONE';
+      this.playBGM(resumeType);
+    }
+  };
+
+  private attachVisibilityHandler() {
+    if (typeof document === 'undefined' || this.visibilityAttached) return;
+    this.visibilityAttached = true;
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
   // ----------------------------------------------------
   // 🎼 BGM 시스템
   // ----------------------------------------------------
   public playBGM(type: BgmType) {
     if (this.currentBgm === type) return;
+    if (type !== 'NONE' && typeof document !== 'undefined' && document.hidden) {
+      this.hiddenBgm = type;
+      return;
+    }
     this.stopBGM();
     this.currentBgm = type;
     if (type === 'NONE') return;

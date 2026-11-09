@@ -2,7 +2,7 @@
 
 > **역할 절차:** [`../roles/QA_DEVOPS.md`](../roles/QA_DEVOPS.md)  
 > **상태:** ACTIVE  
-> **최종 수정일:** 2026-11-08  
+> **최종 수정일:** 2026-11-09
 > **관련 문서:** [`PROJECT_STATE.md`](./PROJECT_STATE.md), [`PRD.md`](./PRD.md), [`DECISIONS.md`](./DECISIONS.md)
 
 ## 1. 목적
@@ -23,11 +23,15 @@
 
 ## 3. 현재 기준선
 
-- 2026-11-08 PM 확인 실행: 17개 테스트 파일, 84개 테스트 통과, 프로덕션 빌드 통과
-- 이관된 독립 QA 증거: `STAB-001` 최종 17개 파일 83개 테스트 통과, `QA-413` 20/20, 전체 회귀 10/10
-- 브라우저 증거: 브론즈 잉글리시·더치 각각 5라운드 완주, 모바일 `390x844` 도감 필터 통과
-- 경찰 탈출·뇌물·체포 S4: 사용자 수동 확인 `승인`
-- 미검증: 저장 실패 강제 주입, 손상 데이터 전체 조합, 전체 접근성, 다중 브라우저, 장기 랜덤·성능 반복
+- 2026-11-09 QA_DEVOPS REPO-001 확인: Vitest 21개 파일 134개 테스트, Playwright E2E 19개, `npm audit` 0건, 루트·하위 경로 이미지 404 0건, Lighthouse SEO 1.00
+- 2026-11-09 DEV A11Y-001 확인: Vitest 21개 파일 134개, Playwright E2E 19개, axe serious·critical 0건, Lighthouse 접근성 1.00
+- 테스트 포함 TypeScript 검사 0오류, V8 커버리지 문장 71.73%·분기 56.85%
+- 기존 기준선: 17개 파일 84개 테스트 → STAB-002 이후 18개 파일 114개 → UI 테스트 추가 후 19개 파일 121개 → PERF·A11Y 이후 21개 파일 134개
+- 브라우저 증거: 영어·더치 5라운드, 비밀 봉투 제출·타임아웃, 경찰 3결과+새로고침, 30종 도감, 모바일 `390x844` 필터, 키보드 전용 5라운드, 모달 포커스 트랩
+- 배포 증거: 루트·`/simple-auction-game/` preview 각각 20 requests·이미지 10개·실패 0, Lighthouse SEO 1.00
+- 경찰 탈출·뇌물·체포 S4: 사용자 수동 확인 `승인` + QA_DEVOPS Playwright 자동화
+- 미검증: 실제 스크린리더 수동 검증, 다중 브라우저, 장기 랜덤 반복, Vercel pause 해제 후 실제 CDN·헤더
+- 추적성 초안: [`QA_TRACEABILITY_DRAFT.md`](./QA_TRACEABILITY_DRAFT.md)
 
 기준선은 회귀 참고이며 새로운 릴리즈 승인을 의미하지 않는다. 현재 판정은 [`PROJECT_STATE.md`](./PROJECT_STATE.md)를 따른다.
 

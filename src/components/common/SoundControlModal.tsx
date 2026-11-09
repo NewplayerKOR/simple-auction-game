@@ -1,6 +1,7 @@
 import React from 'react';
 import { Volume2, VolumeX, Sliders, X } from 'lucide-react';
 import { useAudioStore } from '../../stores/useAudioStore';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 interface SoundControlModalProps {
   isOpen: boolean;
@@ -9,21 +10,35 @@ interface SoundControlModalProps {
 
 export const SoundControlModal: React.FC<SoundControlModalProps> = ({ isOpen, onClose }) => {
   const { isMuted, sfxVolume, bgmVolume, toggleMute, setSfxVolume, setBgmVolume } = useAudioStore();
+  const dialogRef = useModalA11y<HTMLDivElement>(isOpen, onClose);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-      <div 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sound-settings-title"
+        tabIndex={-1}
         className="bg-navy-900 border border-gold-500/40 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2 text-gold-300 font-serif font-bold text-base">
+          <h2 id="sound-settings-title" className="flex items-center gap-2 text-gold-300 font-serif font-bold text-base">
             <Sliders className="w-4 h-4 text-gold-400" />
             <span>오디오 환경 설정</span>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-lg">
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="오디오 설정 닫기"
+            className="text-slate-400 hover:text-white p-1 rounded-lg"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -40,7 +55,9 @@ export const SoundControlModal: React.FC<SoundControlModalProps> = ({ isOpen, on
             </div>
           </div>
           <button
+            type="button"
             onClick={toggleMute}
+            aria-pressed={isMuted}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
               isMuted ? 'bg-red-600 text-white border-red-500' : 'bg-navy-800 text-slate-300 border-slate-700 hover:border-gold-400'
             }`}
@@ -52,15 +69,17 @@ export const SoundControlModal: React.FC<SoundControlModalProps> = ({ isOpen, on
         {/* SFX Volume Slider */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-300 font-medium">효과음(SFX) 볼륨</span>
+            <label htmlFor="sfx-volume" className="text-slate-300 font-medium">효과음(SFX) 볼륨</label>
             <span className="text-gold-400 font-mono font-bold">{Math.round(sfxVolume * 100)}%</span>
           </div>
           <input
+            id="sfx-volume"
             type="range"
             min="0"
             max="1"
             step="0.05"
             value={sfxVolume}
+            aria-valuetext={`${Math.round(sfxVolume * 100)}퍼센트`}
             onChange={(e) => setSfxVolume(parseFloat(e.target.value))}
             className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-gold-400"
           />
@@ -69,21 +88,24 @@ export const SoundControlModal: React.FC<SoundControlModalProps> = ({ isOpen, on
         {/* BGM Volume Slider */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-300 font-medium">배경음악(BGM) 볼륨</span>
+            <label htmlFor="bgm-volume" className="text-slate-300 font-medium">배경음악(BGM) 볼륨</label>
             <span className="text-gold-400 font-mono font-bold">{Math.round(bgmVolume * 100)}%</span>
           </div>
           <input
+            id="bgm-volume"
             type="range"
             min="0"
             max="1"
             step="0.05"
             value={bgmVolume}
+            aria-valuetext={`${Math.round(bgmVolume * 100)}퍼센트`}
             onChange={(e) => setBgmVolume(parseFloat(e.target.value))}
             className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-gold-400"
           />
         </div>
 
         <button
+          type="button"
           onClick={onClose}
           className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-bold text-xs hover:brightness-110"
         >

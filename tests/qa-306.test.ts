@@ -52,10 +52,10 @@ describe('QA-306: 모든 비주얼 이미지 에셋 경로 및 무결성(404 에
 
 
     MASTER_ACHIEVEMENTS.forEach((ach) => {
-      expect(ach.badgeImageUrl).toBeDefined();
-      expect(ach.badgeImageUrl.startsWith('/assets/images/achievements/')).toBe(true);
+      expect(ach.badgeImageUrl!).toBeDefined();
+      expect(ach.badgeImageUrl!.startsWith('/assets/images/achievements/')).toBe(true);
 
-      const filePath = path.join(PUBLIC_DIR, ach.badgeImageUrl.replace(/^\//, ''));
+      const filePath = path.join(PUBLIC_DIR, ach.badgeImageUrl!.replace(/^\//, ''));
       expect(fs.existsSync(filePath), `업적 뱃지 미존재: ${filePath}`).toBe(true);
 
       const stats = fs.statSync(filePath);
@@ -68,10 +68,10 @@ describe('QA-306: 모든 비주얼 이미지 에셋 경로 및 무결성(404 에
     expect(cardList.length).toBe(3);
 
     cardList.forEach((card) => {
-      expect(card.imageUrl).toBeDefined();
-      expect(card.imageUrl.startsWith('/assets/images/cards/')).toBe(true);
+      expect(card.imageUrl!).toBeDefined();
+      expect(card.imageUrl!.startsWith('/assets/images/cards/')).toBe(true);
 
-      const filePath = path.join(PUBLIC_DIR, card.imageUrl.replace(/^\//, ''));
+      const filePath = path.join(PUBLIC_DIR, card.imageUrl!.replace(/^\//, ''));
       expect(fs.existsSync(filePath), `찬스 카드 이미지 미존재: ${filePath}`).toBe(true);
 
       const stats = fs.statSync(filePath);
@@ -83,10 +83,10 @@ describe('QA-306: 모든 비주얼 이미지 에셋 경로 및 무결성(404 에
     expect(MASTER_EVENTS.length).toBe(4);
 
     MASTER_EVENTS.forEach((event) => {
-      expect(event.imageUrl).toBeDefined();
-      expect(event.imageUrl.startsWith('/assets/images/events/')).toBe(true);
+      expect(event.imageUrl!).toBeDefined();
+      expect(event.imageUrl!.startsWith('/assets/images/events/')).toBe(true);
 
-      const filePath = path.join(PUBLIC_DIR, event.imageUrl.replace(/^\//, ''));
+      const filePath = path.join(PUBLIC_DIR, event.imageUrl!.replace(/^\//, ''));
       expect(fs.existsSync(filePath), `이벤트 배너 이미지 미존재: ${filePath}`).toBe(true);
 
       const stats = fs.statSync(filePath);

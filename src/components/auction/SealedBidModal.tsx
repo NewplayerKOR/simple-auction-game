@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Trophy } from 'lucide-react';
 import { useAuctionStore } from '../../stores/useAuctionStore';
+import { AssetImage } from '../common/AssetImage';
+import { assetUrl, assetSrcSet } from '../../services/assetService';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 export const SealedBidModal: React.FC = () => {
   const { isSealedBidModalOpen, sealedBids, currentItem, closeSealedBidModal } = useAuctionStore();
   const [isRevealed, setIsRevealed] = useState(false);
+  const dialogRef = useModalA11y<HTMLDivElement>(isSealedBidModalOpen, closeSealedBidModal, {
+    closeOnEscape: isRevealed,
+  });
 
   useEffect(() => {
     if (isSealedBidModalOpen) {
@@ -22,16 +28,21 @@ export const SealedBidModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-      <div 
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sealed-bid-modal-title"
+        tabIndex={-1}
         className="bg-navy-950 border-2 border-gold-500/60 rounded-3xl w-full max-w-2xl p-6 shadow-2xl shadow-gold-500/20 text-center relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-serif font-bold tracking-widest uppercase mb-4">
-          <img src="/assets/images/ui/icon_sealed_envelope.webp" alt="봉투" className="w-5 h-5 object-contain" />
+          <AssetImage src={assetUrl('/assets/images/ui/icon_sealed_envelope.webp')} width={128} height={128} alt="봉투" className="w-5 h-5 object-contain" />
           <span>4R 비밀 봉투 동시 개봉 (SEALED-BID REVEAL)</span>
         </div>
 
-        <h2 className="font-serif text-xl sm:text-2xl font-black text-slate-100 mb-1">
+        <h2 id="sealed-bid-modal-title" className="font-serif text-xl sm:text-2xl font-black text-slate-100 mb-1">
           {currentItem.name}
         </h2>
         <p className="text-xs text-slate-400 mb-6">
@@ -51,8 +62,12 @@ export const SealedBidModal: React.FC = () => {
                     : 'bg-navy-900/60 border-slate-800'
                 }`}
               >
-                <img
+                <AssetImage
                   src={sub.avatar}
+                  srcSet={assetSrcSet(sub.avatar, 128, '-64', 64)}
+                  sizes="48px"
+                  width={128}
+                  height={128}
                   alt={sub.playerName}
                   className="w-12 h-12 rounded-xl object-cover border-2 border-slate-700 mb-2 shadow-sm"
                 />
@@ -70,7 +85,7 @@ export const SealedBidModal: React.FC = () => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-1 text-slate-400 text-xs font-mono py-1">
-                      <img src="/assets/images/ui/icon_sealed_envelope.webp" alt="밀봉" className="w-4 h-4 object-contain animate-bounce" />
+                      <AssetImage src={assetUrl('/assets/images/ui/icon_sealed_envelope.webp')} width={128} height={128} alt="밀봉" className="w-4 h-4 object-contain animate-bounce" />
                       <span>밀봉됨</span>
                     </div>
                   )}
@@ -89,6 +104,7 @@ export const SealedBidModal: React.FC = () => {
         {/* Action Button */}
         {isRevealed && (
           <button
+            type="button"
             onClick={closeSealedBidModal}
             className="w-full py-3.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-serif font-black text-sm hover:brightness-110 shadow-lg shadow-gold-500/20 flex items-center justify-center gap-2 animate-fade-in"
           >

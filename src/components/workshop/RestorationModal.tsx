@@ -4,6 +4,12 @@ import confetti from 'canvas-confetti';
 import { useCareerStore } from '../../stores/useCareerStore';
 import { RestorationResult } from '../../types';
 import { getOwnedCurseCodes, getRestorationProbabilities } from '../../services/contrabandService';
+import { assetSrcSet, assetVariant } from '../../services/assetService';
+import { getItemLotLabel } from '../../services/itemDisplayService';
+import { prefersReducedMotion } from '../../services/motionService';
+import { AssetImage } from '../common/AssetImage';
+import { ConfirmDialog } from '../common/ConfirmDialog';
+import { useModalA11y } from '../../hooks/useModalA11y';
 
 interface RestorationModalProps {
   isOpen: boolean;
@@ -15,6 +21,8 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<RestorationResult | null>(null);
   const [isRestoring, setIsRestoring] = useState<boolean>(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const dialogRef = useModalA11y<HTMLDivElement>(isOpen && !isConfirmOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -36,12 +44,14 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
         setLastResult(result);
 
         if (result.outcome === 'JACKPOT' || result.outcome === 'SUCCESS') {
-          confetti({
-            particleCount: result.outcome === 'JACKPOT' ? 120 : 60,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: ['#D4AF37', '#10B981', '#F59E0B']
-          });
+          if (!prefersReducedMotion()) {
+            confetti({
+              particleCount: result.outcome === 'JACKPOT' ? 120 : 60,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#D4AF37', '#10B981', '#F59E0B']
+            });
+          }
         }
       } catch (e) {
         console.error('Restoration failed:', e);
@@ -90,37 +100,46 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-lg animate-fade-in">
-      <div 
-        className="w-full max-w-4xl max-h-[90vh] rounded-3xl bg-navy-950/95 backdrop-blur-xl border border-gold-500/30 shadow-2xl overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-navy-900/60">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 shadow-inner">
-              <Wrench className="w-5 h-5" />
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-lg animate-fade-in">
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="restoration-modal-title"
+          aria-hidden={isConfirmOpen || undefined}
+          tabIndex={-1}
+          className="w-full max-w-4xl max-h-[90vh] rounded-3xl bg-navy-950/95 backdrop-blur-xl border border-gold-500/30 shadow-2xl overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-navy-900/60">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 shadow-inner">
+                <Wrench className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 id="restoration-modal-title" className="font-serif text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
+                  <span>소더비 유물 복원 공방 (Restoration)</span>
+                  <span className="text-xs font-mono font-normal px-2 py-0.5 rounded-full bg-navy-950 border border-slate-700 text-gold-300">
+                    보유 현금: ${profile.careerCash.toLocaleString()}
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-400 font-sans mt-0.5">
+                  먼지 쌓이거나 훼손된 유물을 장인의 손길로 복원하여 가치를 회복하세요. (20% 파손 위험)
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
-                <span>소더비 유물 복원 공방 (Restoration)</span>
-                <span className="text-xs font-mono font-normal px-2 py-0.5 rounded-full bg-navy-950 border border-slate-700 text-gold-300">
-                  보유 현금: ${profile.careerCash.toLocaleString()}
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">
-                먼지 쌓이거나 훼손된 유물을 장인의 손길로 복원하여 가치를 회복하세요. (20% 파손 위험)
-              </p>
-            </div>
-          </div>
 
-          <button
-            onClick={onClose}
-            className="min-h-[44px] min-w-[44px] rounded-2xl bg-navy-900 border border-slate-800 text-slate-400 hover:text-slate-100 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="복원 공방 닫기"
+              className="min-h-[44px] min-w-[44px] rounded-2xl bg-navy-900 border border-slate-800 text-slate-400 hover:text-slate-100 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
         {/* Content Body: Left Items List / Right Worktable */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -143,26 +162,30 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
                   const isJackpot = item.isJackpot;
 
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={item.id}
                       onClick={() => {
                         setSelectedItemId(item.id);
                         setLastResult(null);
                       }}
-                      className={`p-3 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3 active:scale-98 ${
+                      aria-pressed={isSelected}
+                      className={`w-full text-left p-3 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex items-center gap-3 active:scale-98 ${
                         isSelected
                           ? 'bg-navy-900 border-gold-400 shadow-md shadow-gold-500/10 scale-[1.01]'
                           : 'bg-navy-950/70 border-slate-800/80 hover:border-slate-700'
                       }`}
                     >
-                      <img
-                        src={item.imageUrl}
+                      <AssetImage
+                        src={assetVariant(item.imageUrl, '-256')}
+                        width={256}
+                        height={256}
                         alt={item.name}
                         className="w-12 h-12 rounded-xl object-cover border border-slate-700 flex-shrink-0 bg-slate-900"
                       />
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center justify-between gap-1">
-                          <h4 className="font-serif font-bold text-xs text-slate-200 truncate">{item.name}</h4>
+                          <span className="font-serif font-bold text-xs text-slate-200 truncate block">{item.name}</span>
                           <span className="font-mono text-xs font-black text-gold-300">${item.realValue.toLocaleString()}</span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -170,7 +193,7 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
                           <span className="text-[10px] font-mono text-slate-400">비용: ${(item.restorationCost || 500).toLocaleString()}</span>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -183,7 +206,7 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
               <div className="p-5 rounded-3xl bg-navy-900/60 border border-slate-800/80 space-y-4 backdrop-blur-md">
                 {/* Result Notification Banner */}
                 {lastResult && (
-                  <div className={`p-4 rounded-2xl border flex items-start gap-3 animate-bounce-short ${
+                  <div role="status" aria-live="polite" className={`p-4 rounded-2xl border flex items-start gap-3 animate-bounce-short ${
                     lastResult.outcome === 'JACKPOT'
                       ? 'bg-gold-500/20 border-gold-400 text-gold-200'
                       : lastResult.outcome === 'SUCCESS'
@@ -208,14 +231,18 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
 
                 {/* Selected Item Big Card */}
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <img
+                  <AssetImage
                     src={selectedItem.imageUrl}
+                    srcSet={assetSrcSet(selectedItem.imageUrl, 512, '-256', 256)}
+                    sizes="(min-width: 640px) 112px, 96px"
+                    width={512}
+                    height={512}
                     alt={selectedItem.name}
                     className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-gold-500/30 shadow-xl bg-slate-900 flex-shrink-0"
                   />
                   <div className="space-y-1.5 flex-1 min-w-0 text-center sm:text-left">
                     <span className="text-[10px] uppercase font-mono font-bold text-gold-400 tracking-wider">
-                      LOT #{selectedItem.id.toUpperCase()} • {selectedItem.tier}
+                      {getItemLotLabel(selectedItem.id)} • {selectedItem.tier}
                     </span>
                     <h3 className="font-serif text-lg sm:text-xl font-black text-slate-100">
                       {selectedItem.name}
@@ -253,7 +280,8 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
 
                 {/* Action Button */}
                 <button
-                  onClick={handleRestore}
+                  type="button"
+                  onClick={() => setIsConfirmOpen(true)}
                   disabled={
                     isRestoring ||
                     profile.careerCash < (selectedItem.restorationCost || 500) ||
@@ -281,6 +309,23 @@ export const RestorationModal: React.FC<RestorationModalProps> = ({ isOpen, onCl
           </div>
         </div>
       </div>
-    </div>
+      </div>
+
+      {isConfirmOpen && selectedItem && (
+        <ConfirmDialog
+          isOpen={isConfirmOpen}
+          tone="danger"
+          title="유물 복원을 진행할까요?"
+          description={`${selectedItem.name} 복원에 $${(selectedItem.restorationCost || 500).toLocaleString()}를 지불합니다. 실패 시 유물이 영구 훼손(RUINED)될 수 있습니다.`}
+          confirmLabel="복원 진행"
+          cancelLabel="취소"
+          onConfirm={() => {
+            setIsConfirmOpen(false);
+            handleRestore();
+          }}
+          onCancel={() => setIsConfirmOpen(false)}
+        />
+      )}
+    </>
   );
 };

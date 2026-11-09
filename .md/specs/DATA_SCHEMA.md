@@ -5,7 +5,7 @@
 > **기술 소유:** DEV  
 > **분류:** `domain-data`  
 > **마이그레이션 이력:** 📜 [MIGRATIONS.md](./MIGRATIONS.md) 참조  
-> **최종 상태 검토일:** 2026-11-08
+> **최종 상태 검토일:** 2026-11-09
 
 ---
 
@@ -27,7 +27,7 @@ export interface Item {
   name: string;
   category: ItemCategory;
   condition: ItemCondition;
-  conditionMultiplier: number;
+  conditionMultiplier: number; // DEC-011 단일 평가 계약
   estimatedMin: number;
   estimatedMax: number;
   realValue: number;
@@ -40,7 +40,7 @@ export interface Item {
   synergyPairId?: string;
   isFake?: boolean;
   isAppraised?: boolean;
-  appraisalCost: number;
+  appraisalCost: number;       // DEC-010 권위, 상수는 fallback
   restorationCost: number;
   isContraband?: boolean;      // [신규] 암시장 밀수품 여부
   curseDebuff?: string;        // [신규] 금기된 유물의 표시용 디버프 (예: "매 게임 종료 시 현금 -$1,000")
@@ -58,6 +58,7 @@ export interface PersistentCareerProfile {
   careerCash: number;              // 현재 보유 현금 ($)
   careerNetWorth: number;          // 총 순자산
   vaultItemIds: string[];          // 소장 유물 ID 목록
+  vaultItemStates?: Record<string, { condition: ItemCondition; isJackpot?: boolean }>; // DEC-011
   unlockedAchievementIds: string[];
   highestRoomTierUnlocked: RoomTier;
   blackVipTicketCount: number;     // [신규] 자정의 암시장 입장 티켓 보유량
@@ -66,6 +67,9 @@ export interface PersistentCareerProfile {
   totalLosses?: number;              // 과거 문서 호환 필드. 현재 통계 권위에는 필수 아님
   isBankrupt: boolean;
   bankruptcyCount: number;
+  activeSession?: ActiveCareerSession; // 4.1 정의
+  lastSettlementReceipt?: CareerSettlementReceipt; // 4.1 정의
+  marketRates?: CategoryMarketRates; // QD-07: 새로고침으로 시세를 회피하지 못하도록 함께 저장
   lastUpdatedTimestamp: number;
 }
 ```
@@ -133,7 +137,14 @@ export interface PersistentCareerProfileV231 extends Omit<PersistentCareerProfil
 - 정산 성공 시 `activeSession`은 제거되고 같은 `sessionId`의 영수증이 생성된다.
 - `careerNetWorth = careerCash + hydrate(vaultItemIds, vaultItemStates)의 평가액`이다.
 - `vaultItemIds`는 유효한 마스터 ID의 중복 없는 목록이다.
+- `vaultItemStates`는 `vaultItemIds`에 포함된 ID만 허용하고, `condition`은 `PRISTINE | DUSTY | DAMAGED | RUINED`만 허용한다.
+- `unlockedAchievementIds`는 마스터 업적 ID만 허용한다.
+- `highestRoomTierUnlocked`는 5개 룸 티어 화이트리스트만 허용하며, 잘못된 값은 `careerNetWorth` 기준으로 재계산한다.
 - `blackVipTicketCount`, 통계 카운터는 0 이상의 정수다.
+- `marketRates`는 프로필과 함께 저장한다. 값이 없거나 손상되면 현재 게임 수 기준으로 새 시세를 생성하고, 배율은 `0.4 ~ 3.5`로 보정한다.
+- 저장 원문 파싱 실패 시 원문을 `SIMPLE_AUCTION_CAREER_V2_BACKUP`에 보관하고 초기 프로필로 복구한다.
+- 감정 비용은 `Item.appraisalCost`가 권위이며, 없거나 유효하지 않을 때만 `APPRAISAL_CONFIG.COST`를 사용한다. (DEC-010)
+- 보존 상태·잭팟 평가는 `src/services/itemValueService.ts`의 단일 함수 계약을 사용한다. (DEC-011)
 
 ### 4.2 라운드 해석 상태
 
