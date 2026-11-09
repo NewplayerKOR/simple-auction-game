@@ -17,7 +17,7 @@ export const ROOM_TIERS_MASTER: Record<RoomTier, RoomTierConfig> = {
     id: 'SILVER',
     name: '🥈 실버 런던 아트 갤러리',
     subtitle: '유명 화랑과 딜러들의 살롱 경매',
-    minNetWorthRequired: 15000,      // 순자산 ,000 이상
+    minNetWorthRequired: 15000,      // 순자산 $15,000 이상
     entryFee: 1000,
     roundsPerGame: 5,
     botStartingCashRange: [15000, 25000],
@@ -29,7 +29,7 @@ export const ROOM_TIERS_MASTER: Record<RoomTier, RoomTierConfig> = {
     id: 'GOLD',
     name: '🥇 골드 로열 소더비',
     subtitle: '국제 메이저 귀족 경매장',
-    minNetWorthRequired: 60000,      // 순자산 ,000 이상
+    minNetWorthRequired: 60000,      // 순자산 $60,000 이상
     entryFee: 5000,
     roundsPerGame: 5,
     botStartingCashRange: [60000, 100000],

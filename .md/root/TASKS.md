@@ -8,7 +8,7 @@
 
 | 마일스톤 | 판정 | 비고 |
 | :--- | :---: | :--- |
-| Phase 01: v2.3.1 안정화 | `RELEASE_CANDIDATE` | `STAB-001` QA `DONE`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` DEV_COMPLETE·독립 QA 대기. `QA-INFRA-001`·`REPO-001` DONE. `DOC-003` 대기. `REL-001` 보류 |
+| Phase 01: v2.3.1 안정화 | `RELEASE_CANDIDATE` | `STAB-001` QA `DONE`. `STAB-002`·`PERF-ASSET-001`·`A11Y-001` DEV_COMPLETE·독립 QA 대기. `QA-INFRA-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` DONE. `REL-001` 보류 |
 | Phase 02: 실시간 멀티플레이 PVP | `BLOCKED` | Phase 01 릴리즈 승인과 서버 권위 설계 전 착수 금지 |
 | Phase 00: Phase 1·2·2.5 | `ARCHIVED` | 상세 증거가 없는 과거 티켓 범위. 현재 릴리즈 근거로 사용하지 않음 |
 
@@ -18,8 +18,8 @@
 
 ## 3. Backlog (대기 중인 작업)
 
-> **진행 순서:** 1번째 `STAB-002` 완료 → 2번째 `QA-INFRA-001` 완료 → 3번째 `PERF-ASSET-001` 완료 → 4번째 `A11Y-001` 완료 → 5번째 `REPO-001` 완료 → 6번째 `DOC-003` → 7번째 `QA-REBASE-001` → 8번째 `REL-001` → 9번째 `ARCH-PVP-001`
-> 6번째 `DOC-003`은 1~5번째 결과를 반영한 뒤 착수한다.
+> **진행 순서:** 1번째 `STAB-002` 완료 → 2번째 `QA-INFRA-001` 완료 → 3번째 `PERF-ASSET-001` 완료 → 4번째 `A11Y-001` 완료 → 5번째 `REPO-001` 완료 → 6번째 `DOC-003` 완료 → 7번째 `QA-REBASE-001` 완료 → 8번째 `REL-001` → 9번째 `ARCH-PVP-001`
+> 8번째 `REL-001`은 1~7번째 결과와 독립 QA 잔여 범위를 확인한 뒤 PM이 판정한다.
 > `STAB-002`·`PERF-ASSET-001`·`A11Y-001`은 DEV_COMPLETE이며 독립 QA_DEVOPS 검증 대기다. `QD-28`은 후속 TASK 후보로 분리했다.
 
 ### [PM]
@@ -27,24 +27,10 @@
 - [ ] `REL-001` **v2.3.1 릴리즈 승인 판정** — P1, Phase 01
   - 진행 순서: 8번째 (1~7번째 결과 확인 후)
   - 목표: 완료 TASK, 사용자 확인 범위, 미검증 제한사항을 종합해 `RELEASE_CANDIDATE -> PM_RELEASE_APPROVED` 또는 보류 사유를 결정한다.
-  - 선행: `STAB-001` `DONE`, `STAB-002`·`QA-INFRA-001`·`PERF-ASSET-001`·`A11Y-001`·`REPO-001`·`DOC-003`·`QA-REBASE-001` 결과 확인.
+  - 선행: `STAB-001` `DONE`, `STAB-002`·`QA-INFRA-001`·`PERF-ASSET-001`·`A11Y-001`·`REPO-001`·`DOC-003` 완료, `QA-REBASE-001` 결과 확인.
   - DoD: 승인 시 `.md/root/TASKS.md`와 `.md/specs/PROJECT_STATE.md`의 마일스톤을 갱신하고, 보류 시 남은 조건과 재판정 시점을 기록한다.
-  - 2026-11-09 PM 판정: **보류**. 사유: 2026-11-09 분석에서 P1 결함 9건(`QD-01`~`QD-09`)과 QA·DevOps P1 과제를 확인했다. 재판정: 1~7번째 TASK 완료 후.
+  - 2026-11-09 PM 판정: **보류**. 사유: 2026-11-09 분석에서 P1 결함 9건(`QD-01`~`QD-09`)과 QA·DevOps P1 과제를 확인했다. 1~7번째 TASK는 완료됐으므로 독립 QA 잔여 범위를 확인한 뒤 재판정한다.
   - 참고: `.md/specs/PROJECT_STATE.md`, `.md/root/archive/v2.3.1/STAB-001.md`
-
-- [ ] `DOC-003` **문서·스키마·추적성 정합** — P2, Phase 01
-  - 진행 순서: 6번째 (`STAB-002`·`QA-INFRA-001` 결과 반영 후)
-  - 목표: 코드·데이터 계약 변경을 문서에 반영하고, PRD 요구사항과 테스트의 추적성 기준을 고정한다.
-  - 담당: PM(문서 권위·요구사항), DEV(기술 명세), QA_DEVOPS(검증·링크·UTF-8).
-  - 범위:
-    - `roomTiers.ts`의 손상된 최소 순자산 주석(`$15,000`, `$60,000`)과 `types/index.ts`의 시너지 주석(`0.35`)을 실제 값으로 정정한다.
-    - `DATA_SCHEMA.md`의 `PoliceRaidState` 필드명과 `Item` 필수·선택 필드를 실제 타입과 일치시킨다.
-    - `ARCHITECTURE.md`의 타이머 정리·단일 저장 작성자 설명을 실제 구현과 일치시킨다.
-    - `QA_TEST_PLAN.md` 기준선(84개)과 `QA-REBASE-001` 매트릭스를 연결하고, “음수 종료 잔액” AC의 테스트 위치를 명시한다.
-    - `README.md`의 실행·검증·배포 절차를 최신 `REPO-001` 결과와 대조하고, README가 소유한 절차는 문서에서 링크로 연결한다.
-  - 선행: `STAB-002`·`QA-INFRA-001` 결과. `QA-REBASE-001`의 매트릭스 초안을 참조한다.
-  - DoD: 문서-코드 필드·상수 불일치 0건, 내부 링크 유효, UTF-8, `QA_TEST_PLAN`의 TC↔테스트 매트릭스 링크, 변경 계약의 근거 파일 기록.
-  - 참고: `.md/specs/ARCHITECTURE.md`, `.md/specs/DATA_SCHEMA.md`, `.md/specs/QA_TEST_PLAN.md`
 
 ### [DEV]
 
@@ -58,30 +44,23 @@
 
 ### [QA / DevOps]
 
-- [!] `QA-REBASE-001` **테스트와 인수 조건의 추적성 재작성** — P1, Phase 01
-  - 진행 순서: 7번째 (`DOC-003` 완료 후)
-  - 목표: 현재 자동화 테스트와 `PRD` 인수 조건·`STAB-001` TC의 추적성 매트릭스를 다시 만든다.
-  - 선행: `QA-INFRA-001`의 테스트 타입·실행 기준, `DOC-003`의 요구사항 ID 정합.
-  - 블로커: 기존 70개 테스트 기준과 현재 134개 테스트·인수 조건의 기준 차이를 먼저 정의해야 한다. 수동 S4 의존도 함께 정리한다.
-  - 다음 담당: QA_DEVOPS가 매트릭스 초안을 만들고 PM이 우선순위를 확인한다.
-  - 해제 조건: PRD REQ ↔ TC-STAB ↔ 테스트 파일 매트릭스, 누락·중복 판정, `QA-INFRA-001` typecheck·E2E 기준선 기록.
-  - 참고: `.md/specs/QA_TEST_PLAN.md`, `.md/specs/PRD.md`
+(현재 진행 중인 작업 없음)
 
 ## 4. Recent Completions (최근 완료 요약)
 
 | TASK | 완료일 | 담당 | 핵심 결과 | 검증 범위 | 원문 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| `QA-REBASE-001` | 2026-11-09 | QA_DEVOPS | PRD REQ↔TC↔테스트 최종 매트릭스, 음수 종료 잔액·6종 저주 개별 보강, 수동 S4 의존 정리 | Vitest 22개 146개·E2E 19개·typecheck 0·coverage 71.91%, 22개 테스트 파일 인벤토리·TC 12개 판정 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
+| `DOC-003` | 2026-11-09 | PM | 스키마·아키텍처·추적성·README 정합, 소스 주석 3줄 DEV 정정 | Vitest 21개 134개·typecheck 0·asset 1,846.9 KB, Markdown 22개 링크 유효·UTF-8 0, 음수 AC 근접 테스트 위치 기록 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `REPO-001` | 2026-11-09 | QA_DEVOPS | Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 검증 | fresh clone, Vitest 134개, E2E 19개, build, Lighthouse SEO 1.00, 이미지 404 0, CI run 42556497240 success | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `A11Y-001` | 2026-11-09 | DEV | 핵심 흐름 접근성·실수 방지 UX, axe serious·critical 0, Lighthouse 접근성 1.00 | 21개 파일 134개 테스트·E2E 19개·키보드 5라운드·모달 포커스·확인 모달·reduced-motion·오디오 영속화 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 | `PERF-ASSET-001` | 2026-11-09 | DEV | 이미지·폰트·번들 예산 최적화, public 75.14 MB → 1.85 MB | 20개 파일 126개 테스트·E2E 13개·typecheck·build, 로비 441.4 KiB·경매 추가 176.0 KiB, Lighthouse 0.96~1.00 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
-| `QA-INFRA-001` | 2026-11-09 | QA_DEVOPS | 테스트 포함 타입 검사 0오류, Vitest 121개·Playwright E2E 11개, 커버리지 기준선, CI 워크플로 | 19개 파일 121개 10회 반복, E2E 11개, coverage 74.6%, axe 기저선 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
-| `STAB-002` | 2026-11-09 | DEV | P1 9건과 동반 P2 구현·자체 검증, `DEV_COMPLETE` | 18개 파일 114개 테스트·빌드·손상 프로필·시세·감정 UI 확인, 독립 QA 대기 | [`TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) |
 
 ## 5. Phase Archives (Phase별 보관 목록)
 
 | Phase | 보관 파일 | 포함 완료 TASK |
 | :--- | :--- | :--- |
-| Phase 01 | [`archive/TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) | `STAB-001`, `STAB-002`, `QA-INFRA-001`, `PERF-ASSET-001`, `A11Y-001`, `REPO-001`, `DOC-002`, `DOC-001` 대체 기록 |
+| Phase 01 | [`archive/TASKS_PHASE_01.md`](./archive/TASKS_PHASE_01.md) | `STAB-001`, `STAB-002`, `QA-INFRA-001`, `PERF-ASSET-001`, `A11Y-001`, `REPO-001`, `QA-REBASE-001`, `DOC-002`, `DOC-003`, `DOC-001` 대체 기록 |
 
 ## 6. Historical Ticket Ranges (상세 증거 없는 과거 기록)
 
@@ -163,3 +142,27 @@
 - 결함·충돌: `assetUrl()`이 Vite 밖 Playwright 테스트 프로세스에서 `import.meta.env`가 없어 실패하는 문제를 확인해 optional env 처리로 수정했다. `DEC-012`로 Node 26·배포 경로 정책을 기록했다.
 - 상태 변경: `REPO-001` `[ ] -> [x]`. 상세 원문은 `.md/root/archive/TASKS_PHASE_01.md` 10절에 보관했다.
 - 다음 시작 지점: `DOC-003`에서 문서·스키마·추적성을 정합한 뒤 `QA-REBASE-001`을 해제한다. PM은 1~7번째 TASK 결과를 확인한 뒤 `REL-001`을 재판정한다.
+
+### 2026-11-09 / PM / DOC-003 문서·스키마·추적성 정합
+
+- 확인한 사실: `roomTiers.ts`의 SILVER·GOLD 최소 순자산 주석이 `,000`으로 손상돼 있었고, `types/index.ts`의 시너지 주석은 실제 가산 비율 0.35와 달리 `1.3 (+30%)`로 표기돼 있었다. `DATA_SCHEMA.md` 1절의 `Item`·`PoliceRaidState`·`PersistentCareerProfile`은 실제 타입과 필수·선택 필드가 달랐다. `ARCHITECTURE.md`는 존재하지 않는 단일 정산 서비스와 모든 콜백의 ID 비교를 설명했고, `StorageService`를 저장 작성자로 잘못 표기했다. `QA_TEST_PLAN`은 84개 기준선과 134개 현재 기준선을 연결했지만 음수 종료 잔액 전용 테스트 위치는 비어 있었다. `README.md`의 검증 순서는 CI의 하위 경로 빌드·audit 단계를 생략했다.
+- 변경한 파일: `src/data/roomTiers.ts`, `src/types/index.ts`(DEV 주석 정정), `.md/specs/DATA_SCHEMA.md`, `.md/specs/ARCHITECTURE.md`, `.md/specs/QA_TEST_PLAN.md`, `.md/specs/QA_TRACEABILITY_DRAFT.md`, `.md/specs/DECISIONS.md`, `.md/specs/DEV_GUIDELINE.md`, `.md/specs/PROJECT_STATE.md`, `.md/root/AGENTS.md`, `.md/root/FEATURES.md`, `.md/root/TASKS.md`, `README.md`.
+- 실행한 명령: `npm.cmd test`, `npm.cmd run typecheck`, `npm.cmd run check:assets`, DEV `git diff -- src/data/roomTiers.ts src/types/index.ts`, 문서 링크·UTF-8 검사, `git diff --check`.
+- 결과: Vitest 21개 파일 134개 테스트 통과, typecheck 0오류, asset 1,846.9 KB·이미지 104개 예산 통과. Markdown 22개 파일의 로컬 링크 유효, UTF-8 대체 문자 0. `DATA_SCHEMA`의 `Item`·`PoliceRaidState`·`PersistentCareerProfile`을 실제 타입과 일치시켰고, `ARCHITECTURE`의 타이머·저장 경로 설명을 구현과 맞췄다. `QA_TEST_PLAN`은 84→134 기준선과 `QA_TRACEABILITY_DRAFT` 링크를 연결하고 음수 종료 잔액 AC의 근접 테스트 위치·미존재 사실을 명시했다. README 검증 순서를 CI와 맞추고 AGENTS·DEV_GUIDELINE·PROJECT_STATE에서 README를 권위 절차로 연결했다.
+- 미검증 범위: 문서 작업이므로 E2E·Lighthouse·브라우저를 재실행하지 않았다. 음수 종료 잔액 전용 테스트는 아직 없으며 `QA-REBASE-001`에서 추가한다. `STAB-002`·`PERF-ASSET-001`·`A11Y-001`의 독립 QA는 별도로 남아 있다.
+- 결함·충돌: `DEC-002`의 결정 당시 `bribeCost` 표기를 현재 필드 `bribeFee`와 함께 기록해 이력과 코드의 차이를 명시했다. `StorageService`는 저장 작성자가 아니라 읽기·위임 어댑터로 정정했고, 로드 정규화가 같은 키를 다시 쓸 수 있다는 실제 동작을 `ARCHITECTURE` 7절에 남겼다.
+- 상태 변경: `DOC-003` `[ ] -> [x]`. `QA-REBASE-001`의 선행 블로커를 해제해 `[!] -> [ ]`로 변경했다.
+- 다음 시작 지점: QA_DEVOPS가 `QA-REBASE-001`에서 REQ↔TC↔테스트 매트릭스와 음수 종료 잔액 전용 케이스를 확정한다. PM은 1~7번째 결과를 확인한 뒤 `REL-001`을 재판정한다.
+
+### 2026-11-09 / QA_DEVOPS / QA-REBASE-001 추적성 재작성
+
+- 확인한 사실: `QA_TRACEABILITY_DRAFT.md`는 PRD REQ 14개와 `TC-STAB` 12개를 테스트 파일 단위로만 연결했고, 음수 종료 잔액 전용 테스트와 6종 저주 개별 테스트 이름이 없었다. 기존 테스트는 21개 파일 134개였고, `qa-301`~`qa-413` 레거시 파일명과 신규 `stab-002`·`perf-asset`·`a11y-001`·E2E가 혼재해 REQ 단위 판정이 어려웠다.
+- 변경한 파일: `.md/specs/QA_TRACEABILITY.md`(DRAFT에서 ACTIVE로 전환), `tests/qa-rebase-001.test.ts`(신규), `.md/specs/QA_TEST_PLAN.md`, `.md/specs/PROJECT_STATE.md`, `.md/root/TASKS.md`, `.md/root/archive/TASKS_PHASE_01.md`.
+- 실행한 명령: `npm test`, `npm run typecheck`, `npm run test:coverage`, `npm run test:e2e`, `npm run build`, `npm audit --audit-level=high`.
+- 결과: Vitest 22개 파일 146개 통과(신규 12개), E2E 19개 통과, typecheck 0오류, build·audit 0 통과. 커버리지 문장 71.91%·분기 57.29%·함수 63%·줄 74.1%. PRD REQ 14개와 `TC-STAB` 12개를 22개 Vitest 파일·5개 E2E 파일에 매핑했고, 자동화 기준 P0/P1 미커버 요구사항 0건으로 판정했다.
+- 신규 테스트: 음수 종료 잔액 파산 정산, 6종 저주 개별 계약, 6종 코드 중복 0, 잉글리시 입찰 경계값, 뇌물 비용 1 부족 거부, 브론즈 승리·골드 탈출·체포·중도 종료 티켓 미지급, 다이아 완주 티켓 지급, 순자산 충족 시 티켓 미소모.
+- 중복 판정: `qa-301`·`qa-302`·`qa-303`·`qa-304`의 중복은 정상 흐름과 경계값을 분리하는 계층으로 확인해 삭제하지 않았다. `qa-306`/`perf-asset`, `qa-413`/E2E, `a11y-001`/E2E도 실패 원인이 달라 보완 관계로 판정했다.
+- 미검증 범위: 실제 스크린리더, Firefox·WebKit, 장기 랜덤 반복, Vercel pause 해제 후 CDN·보안 헤더. `STAB-002`·`PERF-ASSET-001`·`A11Y-001`의 독립 QA는 별도로 남아 있다.
+- 결함·충돌: 제품 결함은 새로 발견하지 않았다. 레거시 테스트 파일명은 이력 보존을 위해 유지하고, REQ·TC 매핑 권위를 `QA_TRACEABILITY.md`로 이동했다.
+- 상태 변경: `QA-REBASE-001` `[ ] -> [x]`. 상세 원문은 `.md/root/archive/TASKS_PHASE_01.md` 12절에 보관했다.
+- 다음 시작 지점: PM이 `QA_TRACEABILITY.md`의 자동화 판정과 잔여 리스크를 확인한 뒤 `REL-001`을 재판정한다. `QA-REBASE-001` 이후 남은 P1 TASK는 없다.

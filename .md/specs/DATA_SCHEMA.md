@@ -10,7 +10,7 @@
 ---
 
 > [!CAUTION]
-> 이 문서는 v2.3.1 도메인 계약을 설명한다. 실제 TypeScript 구현과 일부 필드가 다를 수 있으므로 구현 완료 여부는 코드와 테스트로 확인하고, 불일치는 새 TASK로 해소한다. 현재 마스터 아이템 권위 수량은 `DEC-005`에 따라 총 30종이다. 상세 안정화 계약은 [`../root/archive/v2.3.1/STAB-001.md`](../root/archive/v2.3.1/STAB-001.md)를 따른다.
+> 이 문서는 v2.3.1 도메인 계약을 설명한다. 1절은 실제 TypeScript 타입과 필수·선택 필드를 일치시킨 현재 계약이고, 4절은 `STAB-001`에서 검증한 v2.3.1 목표 계약이다. 4절의 확장 타입은 실제 구현과 이름이 다를 수 있으므로 코드와 테스트로 확인한다. 현재 마스터 아이템 권위 수량은 `DEC-005`에 따라 총 30종이다. 상세 안정화 계약은 [`../root/archive/v2.3.1/STAB-001.md`](../root/archive/v2.3.1/STAB-001.md)를 따른다.
 
 ## 1. 도메인 모델 인터페이스 (v2.3.1)
 
@@ -23,11 +23,16 @@ export type ItemCondition = 'PRISTINE' | 'DUSTY' | 'DAMAGED' | 'RUINED';
 
 export interface Item {
   id: string;
-  tier: RoomTier;
+  tier: RoomTier;              // 소속 룸 티어
   name: string;
   category: ItemCategory;
-  condition: ItemCondition;
-  conditionMultiplier: number; // DEC-011 단일 평가 계약
+  condition?: ItemCondition;   // 유물 보존 상태 (기본: PRISTINE)
+  conditionMultiplier?: number; // DEC-011 단일 평가 계약
+  restorationCost?: number;    // 복원 비용
+  isJackpot?: boolean;         // 잭팟 2배 서명 발견 여부
+  isContraband?: boolean;      // 암시장 밀수품 여부
+  curseCode?: ContrabandCurseCode; // 실행 로직 식별자. curseDebuff는 표시 전용
+  curseDebuff?: string;        // 금기 유물 저주 설명
   estimatedMin: number;
   estimatedMax: number;
   realValue: number;
@@ -38,33 +43,34 @@ export interface Item {
   description: string;
   imageUrl: string;
   synergyPairId?: string;
+  synergyPairName?: string;
   isFake?: boolean;
   isAppraised?: boolean;
   appraisalCost: number;       // DEC-010 권위, 상수는 fallback
-  restorationCost: number;
-  isContraband?: boolean;      // [신규] 암시장 밀수품 여부
-  curseDebuff?: string;        // [신규] 금기된 유물의 표시용 디버프 (예: "매 게임 종료 시 현금 -$1,000")
+  historicalLore?: string;
 }
 
 export interface PoliceRaidState {
+  raidId: string | null;
   isActive: boolean;
-  timeLeftToEscape: number;    // 탈출 제한시간 (5초)
-  bribeCost: number;           // 경찰 매수 뇌물 비용 ($5,000)
-  status: 'IDLE' | 'RAIDED' | 'ESCAPED' | 'BRIBED_AND_WON' | 'ARRESTED';
+  timeLeft: number;            // 탈출 제한시간 (기본 5초)
+  bribeFee: number;            // 경찰 매수 뇌물 비용 (기본 $5,000)
+  itemPrice: number;
+  totalCost: number;
+  status: 'IDLE' | 'RAIDED' | 'RESOLVING' | 'ESCAPED' | 'BRIBED_AND_WON' | 'ARRESTED';
 }
 
 export interface PersistentCareerProfile {
-  storageVersion: string;          // "2.3.1"
+  storageVersion: '2.3.1';
   careerCash: number;              // 현재 보유 현금 ($)
   careerNetWorth: number;          // 총 순자산
   vaultItemIds: string[];          // 소장 유물 ID 목록
   vaultItemStates?: Record<string, { condition: ItemCondition; isJackpot?: boolean }>; // DEC-011
   unlockedAchievementIds: string[];
   highestRoomTierUnlocked: RoomTier;
-  blackVipTicketCount: number;     // [신규] 자정의 암시장 입장 티켓 보유량
+  blackVipTicketCount?: number;    // 자정의 암시장 입장 티켓 보유량
   totalGamesPlayed: number;
   totalWins: number;
-  totalLosses?: number;              // 과거 문서 호환 필드. 현재 통계 권위에는 필수 아님
   isBankrupt: boolean;
   bankruptcyCount: number;
   activeSession?: ActiveCareerSession; // 4.1 정의
@@ -184,13 +190,14 @@ export interface PoliceRaidStateV231 {
   raidId: string | null;
   isActive: boolean;
   timeLeft: number;
-  bribeFee: 5000;
+  bribeFee: number;
   itemPrice: number;
   totalCost: number;
   status: 'IDLE' | 'RAIDED' | 'RESOLVING' | 'ESCAPED' | 'BRIBED_AND_WON' | 'ARRESTED';
 }
 ```
 
+- 구현 타입명은 `PoliceRaidState`이며, 필드 계약은 위와 같다. `bribeFee`의 기본값은 `$5,000`이다.
 - `totalCost = bribeFee + itemPrice`, `itemPrice = currentItem.startingBid`다.
 - `RAIDED`에서 하나의 결과만 `RESOLVING`으로 전이할 수 있다.
 - 체포 정산은 현금 0과 기존 보관함 기반 순자산을 같은 저장에 기록한다.

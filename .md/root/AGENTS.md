@@ -2,7 +2,7 @@
 
 > **상태:** ACTIVE  
 > **문서 체계:** `.md` 단일 체계  
-> **최종 수정일:** 2026-11-08
+> **최종 수정일:** 2026-11-09
 
 [중요] 모든 세션 및 AI 에이전트는 작업을 시작하기 전 이 문서를 가장 먼저 읽고 숙지해야 합니다.
 
@@ -125,10 +125,11 @@
   - Language / Runtime: TypeScript, React 18, Vite, Node.js 26 이상
   - Framework / Library: React, Zustand, Tailwind CSS, Vitest, Web Audio API
   - Database / Infrastructure: 브라우저 LocalStorage, 백엔드 없음
-- 주요 실행/테스트 명령어:
-  - Run: `npm.cmd run dev`
-  - Test: `npm.cmd test`
-  - Build: `npm.cmd run build`
+- 주요 실행·검증 명령 요약:
+  - Run: `npm run dev`
+  - Test: `npm test`
+  - Build: `npm run build`
+- 설치·검증·배포 절차의 권위 문서: [`README.md`](../../README.md)
 - 현재 상태와 검증 증거: `.md/specs/PROJECT_STATE.md`
 
 ---

@@ -2,7 +2,7 @@
 
 > **역할 절차:** [`../roles/DEV.md`](../roles/DEV.md)  
 > **상태:** ACTIVE  
-> **최종 수정일:** 2026-11-08  
+> **최종 수정일:** 2026-11-09
 > **관련 문서:** [`PRD.md`](./PRD.md), [`DECISIONS.md`](./DECISIONS.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`DATA_SCHEMA.md`](./DATA_SCHEMA.md)
 
 ## 1. 이 문서의 범위
@@ -47,7 +47,8 @@
 
 ## 4. 개발 완료 인계
 
-다음을 활성 TASK 작업 기록에 남긴다.
+- 실행·검증·배포 명령의 상세 절차는 루트 [`README.md`](../../README.md)를 따른다. 이 문서는 구현 불변식과 인계 기준만 소유한다.
+- 다음을 활성 TASK 작업 기록에 남긴다.
 
 - 변경 파일과 동작
 - 추가·변경한 테스트

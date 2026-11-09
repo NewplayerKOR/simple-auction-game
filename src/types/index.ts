@@ -213,7 +213,7 @@ export interface SynergySet {
   id: string;
   name: string;
   requiredItemIds: string[];
-  bonusMultiplier: number; // e.g. 1.3 (+30%)
+  bonusMultiplier: number; // 가치 가산 비율 (0.35 = +35%)
   description: string;
 }
 

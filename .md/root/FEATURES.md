@@ -22,7 +22,7 @@
 | 룸 | 5개 룸 게이팅 | 브론즈·실버·골드·다이아몬드·암시장의 최소 순자산과 입장료를 검사한다. 암시장은 순자산 또는 VIP 티켓으로 입장한다. | `src/data/constants.ts`, `src/stores/useCareerStore.ts` | 구현·QA 검증 |
 | 아이템 | 30종 마스터 아이템 | 일반 4개 룸에 각 6종, 암시장에 6종을 배치한다. 한 게임은 해당 룸 6종 중 5종을 중복 없이 사용한다. | `src/data/masterItems.ts`, `src/types/index.ts` | 구현·QA 검증 |
 | 아이템 | 암시장 밀수품 6종 | 각 아이템에 타입이 있는 `curseCode`와 영구 디버프를 매핑하고 해당 행동에서 적용한다. | `src/data/masterItems.ts`, `src/services/contrabandService.ts` | 구현·QA 검증 |
-| 커리어 | 자금 정산 | 세션 종료 시 기존 커리어 현금에 더하지 않고 최종 세션 잔액으로 교체한다. 입장료·대출·저주·뇌물을 한 번만 반영한다. | `src/stores/useCareerStore.ts`, `src/services/storageService.ts` | 구현·QA 검증 |
+| 커리어 | 자금 정산 | 세션 종료 시 기존 커리어 현금에 더하지 않고 최종 세션 잔액으로 교체한다. 입장료·대출·저주·뇌물을 한 번만 반영한다. | `src/stores/useCareerStore.ts`, `src/stores/useAuctionStore.ts` | 구현·QA 검증 |
 | 커리어 | 순자산·파산·룸 해금 | `careerCash + 보관함 평가액`으로 순자산을 계산하고 파산·룸 게이팅·승급을 같은 원장으로 판정한다. | `src/stores/useCareerStore.ts` | 구현·QA 검증 |
 | 커리어 | 복원·위탁 판매 | 복원 확률과 위탁 판매 시장 배수를 적용하고, 밀수품 저주가 해당 계산을 변경한다. 위탁 payout은 UI 미리보기·store 정산·완료 메시지가 같은 단일 함수를 사용하며 보존 배수를 한 번만 적용한다. | `src/services/itemValueService.ts`, `src/components/workshop/`, `src/components/consignment/` | 구현·DEV 검증 |
 | 커리어 | 업적·VIP 티켓 | 업적을 영구 저장하고, 골드·다이아 정상 완주와 `ach-blind-master` 최초 해금에 티켓을 지급한다. | `src/stores/useCareerStore.ts`, `src/data/` | 구현·QA 검증 |
@@ -32,7 +32,7 @@
 | 접근성 | 키보드·스크린리더·실수 방지 | 모든 모달에 dialog 이름·포커스 트랩·초기 포커스·복귀·Escape 닫기를 적용했다. 타이머·입찰가는 live region으로 알리고, reduced-motion에서도 필수 정보를 표시한다. 경매 포기·커리어 초기화·복원·위탁 매각은 확인 모달을 거친다. | `src/hooks/useModalA11y.ts`, `src/components/common/ConfirmDialog.tsx`, `src/components/` | 구현·DEV 검증 |
 | 성능 | 이미지·폰트·번들 예산 | 30종 아이템·아바타·업적·이벤트·카드·배경을 품질 기반 WebP로 재인코딩하고 표시 크기별 `srcset` 변형을 제공한다. 공통 `AssetImage`가 lazy·async·fallback을 적용하며, 경매·결과·도감은 지연 로딩한다. Google Fonts 대신 Cinzel 라틴 서브셋을 자체 호스팅한다. | `public/assets`, `src/components/common/AssetImage.tsx`, `src/services/assetService.ts`, `src/App.tsx`, `src/index.css` | 구현·DEV 검증 |
 | 오디오 | Web Audio BGM·SFX | 외부 MP3 없이 Web Audio 합성으로 배경음과 효과음을 재생한다. | `src/services/` | 구현·부분 검증 |
-| 영속화 | LocalStorage v2.3.1 | 단일 커리어 저장 키와 단일 작성자로 정산·업적·티켓·통계를 한 번에 저장한다. 저장 실패는 화면 전이를 보류하고 재시도를 안내하며, 손상 데이터는 백업 키에 보관한 뒤 초기화한다. 시장 시세와 보존 상태·잠재 잭팟을 함께 저장한다. | `src/stores/useCareerStore.ts`, `src/services/storageService.ts`, `src/components/common/ErrorBoundary.tsx` | 구현·DEV 검증 |
+| 영속화 | LocalStorage v2.3.1 | 단일 커리어 저장 키와 `saveProfileToStorage` 공통 저장 경로로 정산·업적·티켓·통계를 저장한다. 저장 실패는 화면 전이를 보류하고 재시도를 안내하며, 손상 데이터는 백업 키에 보관한 뒤 초기화한다. 시장 시세와 보존 상태·잭팟을 함께 저장한다. | `src/stores/useCareerStore.ts`, `src/services/storageService.ts`, `src/components/common/ErrorBoundary.tsx` | 구현·DEV 검증 |
 | 표기 | 버전·아이템 수 | 패키지·UI가 `2.3.1`을 사용하고 로비·도감·푸터가 전체 30종을 표시한다. | `package.json`, `src/version.ts`, `src/components/` | 구현·QA 검증 |
 
 ## 2. 현재 검증 기준선

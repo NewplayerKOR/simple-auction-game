@@ -23,16 +23,24 @@
 
 ## 3. 현재 기준선
 
-- 2026-11-09 QA_DEVOPS REPO-001 확인: Vitest 21개 파일 134개 테스트, Playwright E2E 19개, `npm audit` 0건, 루트·하위 경로 이미지 404 0건, Lighthouse SEO 1.00
+- 2026-11-09 QA_DEVOPS QA-REBASE-001 확인: Vitest 22개 파일 146개 테스트, Playwright E2E 19개, `npm audit` 0건, 루트·하위 경로 이미지 404 0건, Lighthouse SEO 1.00
 - 2026-11-09 DEV A11Y-001 확인: Vitest 21개 파일 134개, Playwright E2E 19개, axe serious·critical 0건, Lighthouse 접근성 1.00
-- 테스트 포함 TypeScript 검사 0오류, V8 커버리지 문장 71.73%·분기 56.85%
-- 기존 기준선: 17개 파일 84개 테스트 → STAB-002 이후 18개 파일 114개 → UI 테스트 추가 후 19개 파일 121개 → PERF·A11Y 이후 21개 파일 134개
+- 테스트 포함 TypeScript 검사 0오류, V8 커버리지 문장 71.91%·분기 57.29%·함수 63%·줄 74.1%
+- 기존 기준선: 17개 파일 84개 테스트 → STAB-002 이후 18개 파일 114개 → UI 테스트 추가 후 19개 파일 121개 → PERF·A11Y 이후 21개 파일 134개 → QA-REBASE-001 이후 22개 파일 146개
 - 브라우저 증거: 영어·더치 5라운드, 비밀 봉투 제출·타임아웃, 경찰 3결과+새로고침, 30종 도감, 모바일 `390x844` 필터, 키보드 전용 5라운드, 모달 포커스 트랩
 - 배포 증거: 루트·`/simple-auction-game/` preview 각각 20 requests·이미지 10개·실패 0, Lighthouse SEO 1.00
 - CI 증거: GitHub Actions `QA` run `42556497240` success (Node 26, typecheck, asset, coverage, build, subpath build, audit, E2E, artifact)
 - 경찰 탈출·뇌물·체포 S4: 사용자 수동 확인 `승인` + QA_DEVOPS Playwright 자동화
 - 미검증: 실제 스크린리더 수동 검증, 다중 브라우저, 장기 랜덤 반복, Vercel pause 해제 후 실제 CDN·헤더
-- 추적성 초안: [`QA_TRACEABILITY_DRAFT.md`](./QA_TRACEABILITY_DRAFT.md)
+- 최종 추적성 매트릭스: [`QA_TRACEABILITY.md`](./QA_TRACEABILITY.md)
+
+### 3.1 추적성 연결과 기준선
+
+- PRD REQ ↔ TC-STAB ↔ 테스트 파일의 최종 매트릭스는 [`QA_TRACEABILITY.md`](./QA_TRACEABILITY.md)를 따른다. `QA-REBASE-001`에서 누락·중복·수동 의존을 판정했고, 자동화 기준 P0/P1 미커버 요구사항은 0건이다.
+- 기준선 이력: 17개 파일 84개(2026-11-08) → 18개 114개(`STAB-002`) → 19개 121개(`QA-INFRA-001`) → 21개 134개(`PERF-ASSET-001`·`A11Y-001`·`REPO-001`) → 22개 146개(`QA-REBASE-001`).
+- `TC-STAB-001`의 음수 종료 잔액은 `tests/qa-rebase-001.test.ts`의 “음수 종료 잔액도 파산으로 정산하고 현금을 임의 보정하지 않는다”에서 전용 검증한다.
+- `TC-STAB-008`은 `tests/qa-rebase-001.test.ts`에서 6종 저주를 개별 테스트로 검증하고, 기존 `tests/stab-001.test.ts` WP-04가 통합 계약을 보완한다.
+- `REQ-NFR-002` 접근성과 `REQ-NFR-003` 성능은 DEV 검증 결과를 기준선에 반영했고, 독립 QA_DEVOPS 재검증은 `REL-001` 재판정 전에 수행한다.
 
 기준선은 회귀 참고이며 새로운 릴리즈 승인을 의미하지 않는다. 현재 판정은 [`PROJECT_STATE.md`](./PROJECT_STATE.md)를 따른다.
 

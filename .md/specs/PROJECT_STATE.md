@@ -5,7 +5,7 @@
 > **활성 문서 체계:** `.md`  
 > **런타임·패키지 버전:** `2.3.1`  
 > **현재 마일스톤:** v2.3.1 `RELEASE_CANDIDATE`  
-> **다음 판단:** `REL-001` 보류 — 후속 P1 TASK 완료 후 `PM_RELEASE_APPROVED` 재판정
+> **다음 판단:** `REL-001` 보류 — 1~7번째 TASK 완료. 독립 QA 잔여 범위 확인 후 `PM_RELEASE_APPROVED` 재판정
 
 ## 1. 확인된 구현 범위
 
@@ -113,6 +113,28 @@
 | CI 워크플로 | Node 26, typecheck→asset→coverage→build→subpath build→audit→E2E→artifact | GitHub Actions run `42556497240` success. 16단계 전체 통과 |
 | fresh clone | `npm ci`→typecheck→test 134개→build 통과, 빌드 후 working tree clean | 로컬 clone. 원격 CI도 같은 커밋 `81930dd`에서 통과 |
 
+### 2026-11-09 / PM `DOC-003`
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| `npm.cmd test` | 21개 파일 134개 테스트 통과 | DOC-003 시점 현재 리비전. React ErrorBoundary 테스트의 의도된 `render failed` 로그 외 실패 0건 |
+| `npm.cmd run typecheck` | 테스트 포함 0오류 | `tsconfig.test.json` 기준 |
+| `npm.cmd run check:assets` | public 1,846.9 KB, 이미지 104개 1,821.2 KB, 예산·무결성 통과 | 파일 검사이며 브라우저 렌더를 대신하지 않음 |
+| 문서 정합 | `Item`·`PoliceRaidState`·`PersistentCareerProfile` 실제 타입 일치, 룸 주석·시너지 주석 정정 | DOC-003 범위. E2E·Lighthouse 재실행은 아님 |
+| 링크·UTF-8 | Markdown 22개 파일의 로컬 링크 유효, U+FFFD 0, `git diff --check` 오류 0 | 로컬 정적 검사 |
+
+### 2026-11-09 / QA_DEVOPS `QA-REBASE-001`
+
+| 검증 | 결과 | 검증 범위와 한계 |
+| :--- | :--- | :--- |
+| 최종 추적성 | PRD REQ 14개 ↔ `TC-STAB` 12개 ↔ Vitest 22개·E2E 19개 매핑 | [`QA_TRACEABILITY.md`](./QA_TRACEABILITY.md) ACTIVE |
+| 신규 테스트 | `tests/qa-rebase-001.test.ts` 12개 | 음수 종료 잔액, 6종 저주 개별, 잉글리시 입찰 경계값, 뇌물 비용 부족, 티켓 지급·미소모 |
+| `npm test` | 22개 파일 146개 테스트 통과 | skip·xfail 0건 |
+| `npm run typecheck` | 테스트 포함 0오류 | `tsconfig.test.json` 기준 |
+| `npm run test:coverage` | 문장 71.91%, 분기 57.29%, 함수 63%, 줄 74.1% | V8 기준선 |
+| `npm run test:e2e` | Playwright Chromium 19개 통과 | 영어·더치 5라운드, 비밀 봉투, 경찰 3결과, 접근성·성능 자산 |
+| 자동화 판정 | P0/P1 미커버 요구사항 0건 | 독립 QA·실제 스크린리더·다중 브라우저·Vercel CDN은 별도 잔여 |
+
 ### 구 `docs/`에서 이관한 QA 증거
 
 | 검증 | 결과 | 한계 |
@@ -166,12 +188,14 @@
 - `A11Y-001`은 DEV 구현·자체 검증을 완료했다. axe serious·critical 0건, Lighthouse 접근성 1.00, 키보드 5라운드 E2E 6개, 확인 모달·reduced-motion·오디오 영속화를 확인했다.
 - A11Y-001 반영 후에도 PERF-ASSET-001 예산은 유지된다. 로비 450.1 KiB, 경매 진입 추가 149.6 KiB, Lighthouse 총 186 KiB다.
 - `REPO-001`은 완료했다. Node 26·CI·배포 위생, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00을 확인했다. Vercel 프로젝트는 사용자가 pause 상태로 두어 실제 Vercel 헤더·CDN 검증은 재개 후로 미룬다.
-- v2.3.1은 `RELEASE_CANDIDATE`이지만 `REL-001`은 **보류**다. `DOC-003`·`QA-REBASE-001` 등 1~7번째 후속 TASK 완료 후 재판정한다.
+- `QA-REBASE-001`은 완료했다. 최종 추적성 매트릭스와 음수 종료 잔액·6종 저주 개별 테스트를 추가했고, 자동화 기준 P0/P1 미커버 요구사항은 0건이다.
+- v2.3.1은 `RELEASE_CANDIDATE`이지만 `REL-001`은 **보류**다. 1~7번째 TASK가 완료됐으므로 PM이 독립 QA 잔여 범위를 확인한 뒤 `REL-001`을 재판정한다.
 
 ## 5. 알려진 제한사항과 미검증 범위
 
 - `STAB-002`의 저장 실패·손상 프로필·구버전 프로필 복구는 DEV 테스트로 고정했지만 독립 QA_DEVOPS 재검증은 미수행
 - `ErrorBoundary`의 실제 렌더 오류 유도, 경찰 모달 숨은 가치 비노출, 위탁·비밀 봉투 UI의 전 룸 브라우저 반복은 미검증
+- `TC-STAB-001`의 음수 종료 잔액은 `tests/qa-rebase-001.test.ts`에서 전용 검증한다. `TC-STAB-008`은 6종 저주를 개별 테스트로 검증한다.
 - 테스트 포함 타입 검사 12개 오류는 `QA-INFRA-001`에서 0개로 해소
 - Lighthouse 기준선은 로컬 Edge 157 headless 1회 측정이다. 실제 배포 CDN·압축·다중 기기·반복 측정은 `REPO-001`·`QA-REBASE-001` 범위다.
 - Lighthouse 접근성은 A11Y-001 반영 후 1.00이다. 실제 스크린리더(NVDA·VoiceOver) 수동 검증과 다중 브라우저 키보드 반복은 미검증이다.
@@ -182,6 +206,7 @@
 - 장기 랜덤 반복과 성능 반복
 - 경찰 탈출·뇌물·체포 S4는 사용자 수동 확인이며 QA 에이전트 직접 재실행은 아님
 - 5라운드 E2E는 잉글리시·더치 각각 1회 완주이며 반복·다중 환경은 아님
+- 실제 스크린리더·Firefox·WebKit·Vercel CDN은 `QA_TRACEABILITY.md` 7절의 잔여 리스크로 관리한다.
 
 ## 6. 현재 작업 상태
 
@@ -192,18 +217,18 @@
 - `PERF-ASSET-001`: `[x]` DEV_COMPLETE — public 1.85 MB, 로비 441.4 KiB, 경매 추가 176.0 KiB, Lighthouse 0.96~1.00, 독립 QA_DEVOPS 재검증 대기
 - `A11Y-001`: `[x]` DEV_COMPLETE — axe serious·critical 0, Lighthouse 접근성 1.00, 키보드·확인 모달·reduced-motion·오디오 영속화 검증, 독립 QA_DEVOPS 재검증 대기
 - `REPO-001`: `[x]` DONE — Node 26·CI/CD·배포 위생, 추적 산출물 분리, audit 0, 루트·하위 경로 이미지 404 0, Lighthouse SEO 1.00
-- `DOC-003`: `[ ]` 대기 — `.md/root/TASKS.md` Backlog 참조
-- `REL-001`: `[ ]` **보류** — 2026-11-09 PM 판정. 후속 P1 TASK 1~7번째 완료 후 재판정
-- `QA-REBASE-001`: `[!]` 블로커 — `QA-INFRA-001`·`DOC-003` 결과 후 추적성 재작성
+- `DOC-003`: `[x]` DONE — 스키마·아키텍처·추적성·README 정합, 소스 주석 3줄 DEV 정정
+- `QA-REBASE-001`: `[x]` DONE — PRD REQ↔TC↔테스트 최종 매트릭스, 음수 종료 잔액·6종 저주 개별 테스트, 수동 S4 의존 정리
+- `REL-001`: `[ ]` **보류** — 2026-11-09 PM 판정. 1~7번째 완료, 독립 QA 잔여 범위 확인 후 재판정
 - `ARCH-PVP-001`: `[!]` 블로커 — 서버 권위형 Phase 3 사전 아키텍처
 - Phase 3 실시간 PVP: v2.3.1 릴리즈 승인과 서버 권위 설계 전 착수 금지
 
 ## 7. 다음 시작 지점
 
-1. QA_DEVOPS: `STAB-002`·`PERF-ASSET-001`·`A11Y-001`의 독립 검증을 수행한다. 현재 기준선은 Vitest 21개 파일 134개, Playwright 19개, axe serious·critical 0, Lighthouse 접근성 1.00이다.
+1. QA_DEVOPS: `STAB-002`·`PERF-ASSET-001`·`A11Y-001`의 독립 검증을 수행한다. 현재 기준선은 Vitest 22개 파일 146개, Playwright 19개, axe serious·critical 0, Lighthouse 접근성 1.00이다.
 2. QA_DEVOPS: `PERF-ASSET-001` 예산과 `A11Y-001` 키보드·axe를 독립 재현한다. `npm run check:assets`, `npm run perf:transfer`, Lighthouse, `tests/e2e/a11y-keyboard.spec.ts`를 확인한다.
-3. PM·QA_DEVOPS: `DOC-003`에서 문서·스키마·추적성을 정합한 뒤 `QA-REBASE-001`을 해제한다. `REPO-001`의 원격 CI 실행과 Vercel 재개 후 헤더 검증 결과를 반영한다.
-4. PM: 1~7번째 TASK 완료 후 `REL-001`을 재판정한다.
+3. PM: 1~7번째 TASK 완료와 `QA_TRACEABILITY.md`의 잔여 리스크를 확인한 뒤 `REL-001`을 재판정한다.
+4. QA_DEVOPS·PM: Vercel 프로젝트 재개 후 실제 보안 헤더·CDN 캐시를 확인한다.
 5. DEV: QA_DEVOPS가 보고한 결함을 수정한다. `QD-28`(시드 기반 RNG·세션 이벤트 로그)은 후속 TASK 후보로 분리한다.
 6. 새 기능 요청은 `.md/root/TASKS.md`에 TASK로 등록한 뒤 착수한다.
 
@@ -215,4 +240,5 @@
 - 작업 보드: `.md/root/TASKS.md`
 - 기능 명세: `.md/root/FEATURES.md`
 - 기술 명세: `.md/specs/`
+- 실행·검증·배포 절차: [`README.md`](../../README.md)
 - 구 `docs/`는 2026-11-08 이관 후 삭제했다. 이관 전 상세 이력은 Git 커밋과 `.md/root/archive/TASKS_PHASE_01.md`에 보존한다.

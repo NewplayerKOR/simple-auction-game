@@ -38,7 +38,7 @@ npm run check:assets # public 자산 예산·WebP·참조 무결성
 npm run build        # 프로덕션 빌드 (dist/)
 ```
 
-전체 검증 순서는 CI와 동일하게 `typecheck → check:assets → test:coverage → build → test:e2e`를 권장합니다.
+전체 검증 순서는 CI와 동일하게 `typecheck → check:assets → test:coverage → build → build:subpath → npm audit → test:e2e`를 권장합니다. CI는 하위 경로 빌드 후 루트 빌드를 복원하고, `npx playwright install --with-deps chromium` 후 E2E를 실행합니다.
 
 ### E2E 참고
 
@@ -140,4 +140,5 @@ git push origin main --follow-tags
 - 제품 요구사항: [`.md/specs/PRD.md`](./.md/specs/PRD.md)
 - 결정 로그: [`.md/specs/DECISIONS.md`](./.md/specs/DECISIONS.md)
 - QA 계획: [`.md/specs/QA_TEST_PLAN.md`](./.md/specs/QA_TEST_PLAN.md)
+- QA 추적성: [`.md/specs/QA_TRACEABILITY.md`](./.md/specs/QA_TRACEABILITY.md)
 - 기능 명세: [`.md/root/FEATURES.md`](./.md/root/FEATURES.md)

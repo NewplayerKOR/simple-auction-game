@@ -15,13 +15,13 @@
 
 ```text
 UI
- ├─ Auction commands ─> Auction FSM / round timers
- └─ Career queries  ──> Career domain
+ ├─ Auction commands ─> useAuctionStore (round FSM / timers)
+ └─ Career queries  ──> useCareerStore (profile state)
 
-Auction FSM
- └─ one CareerSettlementCommand ─> Career settlement service
+useAuctionStore
+ └─ one CareerSettlementCommand ─> useCareerStore.commitGameResult
 
-Career settlement service (single writer)
+useCareerStore.saveProfileToStorage (career write path)
  ├─ economy / vault / achievement / ticket / statistics reducers
  └─ one JSON replacement ─> SIMPLE_AUCTION_CAREER_V2
 
@@ -29,19 +29,20 @@ Codex / Result UI
  └─ read-only projection of committed career profile
 ```
 
-- UI 컴포넌트는 커리어 LocalStorage를 직접 쓰지 않는다.
-- 경매 스토어는 라운드 휘발 상태를 소유하고, 종료 결과를 커리어 정산 서비스에 한 번 전달한다.
-- 커리어 정산 서비스는 자금·보관함·업적·티켓·통계를 하나의 순수 계산 결과로 만든 뒤 한 번 저장한다.
+- UI 컴포넌트는 커리어 프로필 키를 직접 쓰지 않는다. `ErrorBoundary`만 손상 원문을 백업 키에 기록한다.
+- 경매 스토어는 라운드 휘발 상태를 소유하고, 종료 결과를 `useCareerStore.commitGameResult`에 한 번 전달한다.
+- `useCareerStore`는 자금·보관함·업적·티켓·통계를 하나의 계산 결과로 만든 뒤 `saveProfileToStorage`로 한 번 저장한다.
+- `StorageService`는 도감·업적 하이드레이션과 기존 store 명령 위임을 담당하며 LocalStorage를 직접 쓰지 않는다.
 - 도감·결과 화면은 저장된 커리어 프로필을 읽기 전용으로 투영한다.
 
 ## 3. 런타임 책임
 
 | 모듈 | 책임 | 하지 않는 일 |
 | :--- | :--- | :--- |
-| UI 컴포넌트 | 명령 전달, 상태 표시, 모달 포커스·복귀 | LocalStorage 직접 쓰기, 정산 재계산 |
+| UI 컴포넌트 | 명령 전달, 상태 표시, 모달 포커스·복귀 | 커리어 프로필 키 직접 쓰기, 정산 재계산 |
 | `useAuctionStore` | 라운드 FSM, 타이머, 입찰·낙찰·유찰 상태 | 커리어 프로필 직접 저장 |
-| `useCareerStore` | 커리어 프로필 조회, 정산 명령 진입점 | 경매 라운드 상태 소유 |
-| `StorageService` | 단일 커리어 저장 키 읽기·쓰기, 마이그레이션 | UI 상태·타이머 관리 |
+| `useCareerStore` | 커리어 프로필 조회, 정산 명령 진입점, `saveProfileToStorage` 커리어 변경 저장 경로 | 경매 라운드 상태 소유 |
+| `StorageService` | 도감·업적 읽기 하이드레이션, 기존 store 명령 위임 | LocalStorage 직접 쓰기, 정산 재계산 |
 | `aiBotService` | 공개 정보 기반 봇 입찰·구매 판단 | `realValue`, `isFake` 직접 참조 |
 | `contrabandService` | `curseCode`별 효과 계산 | 표시 문자열 파싱 |
 
@@ -50,9 +51,11 @@ Codex / Result UI
 - `sessionId`: 룸 입장 1회당 하나. 입장료·티켓 차감과 함께 저장한다.
 - `roundId`: 세션 내 각 라운드당 하나. 이전 라운드의 지연 콜백을 차단한다.
 - `roundResolutionId`: 비밀경매·더치·경찰 결과를 정확히 한 번 확정한다.
-- `raidId`: 경찰 급습 1회당 하나. 탈출·뇌물·체포 중 첫 유효 명령만 결과를 확정한다.
-- 모든 타이머·지연 콜백은 캡처한 `sessionId`·`roundId`·`roundResolutionId`·`raidId`와 현재 값을 다시 비교한다.
-- 모달 닫기, 로비 복귀, 컴포넌트 언마운트, 경찰 급습, 라운드 종료는 해당 모듈이 소유한 타이머를 정리한다.
+- `raidId`: 경찰 급습 1회당 하나. 탈출·체포는 `raidId`와 `status`를 확인해 첫 유효 명령만 결과를 확정한다.
+- 잉글리시·비밀 봉투 라운드 타이머는 `AuctionGameView`의 effect가 소유한다. FSM이 입찰 상태를 벗어나거나 컴포넌트가 언마운트되면 interval을 정리한다.
+- 더치 틱 엔진은 클레임·바닥가·라운드 종료·로비 복귀·경찰 급습에서 `stop()`한다. 더치 클레임·바닥가 지연 콜백은 `roundResolutionId`와 `claimStatus`를 비교한다.
+- 봇 입찰·더치 인트로 지연 콜백은 현재 FSM과 경찰 상태를 다시 확인한다. 모든 콜백이 네 가지 런타임 ID를 모두 캡처하지는 않는다.
+- 경찰 모달·비밀 봉투 모달·경매 화면은 언마운트 시 자신이 소유한 interval·timeout을 정리한다. 복원 모달의 900ms 결과 지연 콜백은 현재 별도 정리하지 않는다. 경찰 모달과 비밀 봉투 모달은 필수 선택 구간에서 Escape 닫기를 막는다.
 - 같은 명령의 재호출은 `ALREADY_APPLIED`, 다른 세션의 오래된 명령은 `STALE_SESSION`으로 거부한다.
 
 ## 5. 경매 계약
@@ -142,6 +145,7 @@ IDLE -> RAIDED -> RESOLVING -> ESCAPED | BRIBED_AND_WON | ARRESTED
 - 저장 키: `SIMPLE_AUCTION_CAREER_V2`
 - 백업 키: `SIMPLE_AUCTION_CAREER_V2_BACKUP` — 새 저장 직전 원문과 손상 원문을 보관한다.
 - 저장 버전: `2.3.1`
+- 커리어 변경의 공통 저장 함수는 `useCareerStore.saveProfileToStorage`다. 실패 시 `false`를 반환하고 호출자는 화면 전이를 보류한다. 로드 시 정규화는 `loadProfileFromStorage`가 같은 키를 다시 쓸 수 있으며, `ErrorBoundary`는 백업 키만 쓴다.
 - `activeSession`: 최대 하나. 활성 세션이 있으면 새 룸 입장을 거부한다. 다른 탭이 저장한 활성 세션도 입장을 차단한다.
 - `lastSettlementReceipt`: 마지막 정산의 `sessionId`, 결과, 종료 현금·순자산, 적용 시각을 보관한다.
 - `careerNetWorth`는 `careerCash + 보관함 평가액`이다.
